@@ -15,7 +15,10 @@ class Seminar(models.Model):
 
 
 class UserSeminar(models.Model):
+    AVAILABLE_ROLES = [(0, 'participant'), (1, 'instructor')]
     user = models.ForeignKey(User, related_name='user_seminar', on_delete=models.CASCADE)
     seminar = models.ForeignKey(Seminar, related_name='user_seminar', on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    role = models.PositiveSmallIntegerField(choices=AVAILABLE_ROLES, db_index=True, default=None)
+    dropped_out = models.DateTimeField(null=True)

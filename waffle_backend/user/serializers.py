@@ -25,6 +25,7 @@ class UserSerializer(serializers.ModelSerializer):
             'date_joined',
         )
 
+
     def validate_password(self, value):
         return make_password(value)
 
