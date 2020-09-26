@@ -2,6 +2,7 @@ from django.contrib.auth.hashers import make_password
 from django.contrib.auth.models import User
 from rest_framework import serializers
 from rest_framework.authtoken.models import Token
+from user.models import ParticipantProfile
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -11,6 +12,7 @@ class UserSerializer(serializers.ModelSerializer):
     last_name = serializers.CharField(required=False)
     last_login = serializers.DateTimeField(read_only=True)
     date_joined = serializers.DateTimeField(read_only=True)
+    participant = serializers.SerializerMethodField()
 
     class Meta:
         model = User
@@ -23,8 +25,13 @@ class UserSerializer(serializers.ModelSerializer):
             'last_name',
             'last_login',
             'date_joined',
+            'participant',
         )
 
+    def get_participant(self, user):
+        if hasattr(user, 'participant'):
+            return ParticipantProfileSerializer(user.participant, context=self.context).data
+        return None
 
     def validate_password(self, value):
         return make_password(value)
@@ -42,3 +49,12 @@ class UserSerializer(serializers.ModelSerializer):
         user = super(UserSerializer, self).create(validated_data)
         Token.objects.create(user=user)
         return user
+
+
+class ParticipantProfileSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ParticipantProfile
+        fields = (
+            'user_id',
+            'university',
+        )
