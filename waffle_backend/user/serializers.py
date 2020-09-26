@@ -3,6 +3,8 @@ from django.contrib.auth.models import User
 from rest_framework import serializers
 from rest_framework.authtoken.models import Token
 from user.models import ParticipantProfile
+from seminar.serializers import UserSeminarSerializer
+from seminar.models import UserSeminar
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -52,6 +54,8 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class ParticipantProfileSerializer(serializers.ModelSerializer):
+    seminars = serializers.SerializerMethodField()
+
     class Meta:
         model = ParticipantProfile
         fields = (
@@ -59,4 +63,10 @@ class ParticipantProfileSerializer(serializers.ModelSerializer):
             'university',
             'year',
             'accepted',
+            'seminars',
         )
+
+    def get_seminars(self, participant):
+        user = participant.user
+        queryset = UserSeminar.objects.filter(user=user)
+        return UserSeminarSerializer(queryset, many=True).data
