@@ -20,5 +20,5 @@ class UserSeminar(models.Model):
     seminar = models.ForeignKey(Seminar, related_name='user_seminar', on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    role = models.PositiveSmallIntegerField(choices=AVAILABLE_ROLES, db_index=True, default=None)
+    role = models.PositiveSmallIntegerField(choices=AVAILABLE_ROLES, default=None)
     dropped_at = models.DateTimeField(null=True)
