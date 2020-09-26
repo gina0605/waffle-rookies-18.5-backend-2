@@ -5,7 +5,11 @@ from django.contrib.auth.models import User
 class Seminar(models.Model):
     name = models.CharField(unique=True, max_length=100)
     description = models.CharField(max_length=200, blank=True)
+    capacity = models.PositiveSmallIntegerField(default=None)
+    count = models.PositiveSmallIntegerField(default=None)
+    time = models.TimeField(default=None)
     start_date = models.DateField(null=True)
+    online = models.BooleanField(default=None)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
