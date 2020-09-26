@@ -16,6 +16,11 @@ class UserSerializer(serializers.ModelSerializer):
     date_joined = serializers.DateTimeField(read_only=True)
     participant = serializers.SerializerMethodField()
     instructor = serializers.SerializerMethodField()
+    role = serializers.CharField(write_only=True)
+    university = serializers.CharField(write_only=True, required=False)
+    accepted = serializers.NullBooleanField(write_only=True, required=False)
+    company = serializers.CharField(write_only=True, required=False)
+    year = serializers.IntegerField(write_only=True, required=False)
 
     class Meta:
         model = User
@@ -30,6 +35,11 @@ class UserSerializer(serializers.ModelSerializer):
             'date_joined',
             'participant',
             'instructor',
+            'role',
+            'university',
+            'accepted',
+            'company',
+            'year',
         )
 
     def get_participant(self, user):
@@ -52,11 +62,34 @@ class UserSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("First name and last name should appear together.")
         if first_name and last_name and not (first_name.isalpha() and last_name.isalpha()):
             raise serializers.ValidationError("First name or last name should not have number.")
+
+        role = data.get('role')
+        if role not in ['participant', 'instructor']:
+            raise serializers.ValidationError("Role should be participant or instructor.")
+        if role == 'participant' and data.get('accepted', None) == None:
+            raise serializers.ValidationError("For participants, accepted should be given.")
         return data
 
     def create(self, validated_data):
+        role = validated_data.pop('role')
+        university = validated_data.pop('university', '')
+        accepted = validated_data.pop('accepted', None)
+        company = validated_data.pop('company', '')
+        year = validated_data.pop('year', None)
         user = super(UserSerializer, self).create(validated_data)
         Token.objects.create(user=user)
+        if role == 'participant':
+            ParticipantProfile.objects.create(
+                user=user,
+                university=university,
+                accepted=accepted,
+            )
+        elif role == 'instructor':
+            InstructorProfile.objects.create(
+                user=user,
+                company=company,
+                year=year,
+            )
         return user
 
 
