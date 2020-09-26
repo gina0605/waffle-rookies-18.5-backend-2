@@ -74,7 +74,7 @@ class ParticipantProfileSerializer(serializers.ModelSerializer):
 
     def get_seminars(self, participant):
         user = participant.user
-        queryset = UserSeminar.objects.filter(user=user, role=0)
+        queryset = UserSeminar.objects.filter(user=user, role='participant')
         return ParticipantSeminarSerializer(queryset, many=True).data
 
 
@@ -92,5 +92,5 @@ class InstructorProfileSerializer(serializers.ModelSerializer):
 
     def get_charge(self, participant):
         user = participant.user
-        queryset = UserSeminar.objects.filter(user=user, role=1)
+        queryset = UserSeminar.objects.filter(user=user, role='instructor')
         return InstructorSeminarSerializer(queryset, many=True).data
