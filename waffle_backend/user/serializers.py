@@ -49,11 +49,16 @@ class UserSerializer(serializers.ModelSerializer):
 
     def get_instructor(self, user):
         if hasattr(user, 'instructor'):
-            return InstructorProfileSerializer(user.participant, context=self.context).data
+            return InstructorProfileSerializer(user.instructor, context=self.context).data
         return None
 
     def validate_password(self, value):
         return make_password(value)
+
+    def validate_year(self, value):
+        if value < 0:
+            raise serializers.ValidationError("Year should be zero or positive.")
+        return value
 
     def validate(self, data):
         first_name = data.get('first_name')
