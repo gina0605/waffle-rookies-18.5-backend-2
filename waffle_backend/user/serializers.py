@@ -57,4 +57,6 @@ class ParticipantProfileSerializer(serializers.ModelSerializer):
         fields = (
             'user_id',
             'university',
+            'year',
+            'accepted',
         )

@@ -7,6 +7,7 @@ class ParticipantProfile(models.Model):
                                 related_name='participant', primary_key=True)
     university = models.CharField(max_length=50, blank=True)
     year = models.PositiveSmallIntegerField(null=True)
+    accepted = models.BooleanField(default=None)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
