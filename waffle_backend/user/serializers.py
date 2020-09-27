@@ -46,7 +46,7 @@ class UserSerializer(serializers.ModelSerializer):
 
     def get_participant(self, user):
         if hasattr(user, 'participant'):
-            return ReadParticipantProfileSerializer(user.participant, context=self.context).data
+            return ParticipantProfileSerializer(user.participant, context=self.context).data
         return None
 
     def get_instructor(self, user):
@@ -69,12 +69,12 @@ class UserSerializer(serializers.ModelSerializer):
         serializer = None
         if not role:
             if hasattr(self.instance, 'participant'):
-                ReadParticipantProfileSerializer(data=data).is_valid(raise_exception=True)
+                ParticipantProfileSerializer(data=data).is_valid(raise_exception=True)
             if hasattr(self.instance, 'instructor'):
                 ReadInstructorProfileSerializer(data=data).is_valid(raise_exception=True)
         else:
             if role == 'participant':
-                serializer = ReadParticipantProfileSerializer(data=data)
+                serializer = ParticipantProfileSerializer(data=data)
             elif role == 'instructor':
                 serializer = ReadInstructorProfileSerializer(data=data)
             serializer.is_valid(raise_exception=True)
@@ -114,6 +114,26 @@ class UserSerializer(serializers.ModelSerializer):
             instructor.year = validated_data.pop('year', instructor.year)
             instructor.save()
         super(UserSerializer, self).update(instance, validated_data)
+
+
+class ParticipantProfileSerializer(serializers.ModelSerializer):
+    seminars = serializers.SerializerMethodField(read_only=True)
+
+    class Meta:
+        model = ParticipantProfile
+        fields = (
+            'id',
+            'user',
+            'university',
+            'accepted',
+            'seminars',
+        )
+        extra_kwargs = {'user': {'write_only': True}}
+
+    def get_seminars(self, participant):
+        user = participant.user
+        queryset = UserSeminar.objects.filter(user=user, role='participant')
+        return ParticipantSeminarSerializer(queryset, many=True).data
 
 
 class ReadParticipantProfileSerializer(serializers.ModelSerializer):

@@ -7,7 +7,7 @@ from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 
-from user.serializers import UserSerializer, WriteParticipantProfileSerializer
+from user.serializers import UserSerializer, ParticipantProfileSerializer
 
 
 class UserViewSet(viewsets.GenericViewSet):
@@ -78,9 +78,7 @@ class UserViewSet(viewsets.GenericViewSet):
             return Response({"error": "Already a participant"}, status=status.HTTP_400_BAD_REQUEST)
         data = request.data.copy()
         data['user'] = user.pk
-        print(data)
-        participantserializer = WriteParticipantProfileSerializer(data=data)
-        print(participantserializer)
-        participantserializer.is_valid(raise_exception=True)
-        participantserializer.save()
+        serializer = ParticipantProfileSerializer(data=data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
         return Response(self.get_serializer(user).data, status=status.HTTP_201_CREATED)
