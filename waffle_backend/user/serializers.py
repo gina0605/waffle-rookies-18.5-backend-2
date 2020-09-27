@@ -8,6 +8,7 @@ from seminar.models import UserSeminar
 
 
 class UserSerializer(serializers.ModelSerializer):
+    ROLE_CHOICES = ('participant', 'instructor')
     email = serializers.EmailField(allow_blank=False)
     password = serializers.CharField(write_only=True)
     first_name = serializers.CharField(required=False)
@@ -16,7 +17,7 @@ class UserSerializer(serializers.ModelSerializer):
     date_joined = serializers.DateTimeField(read_only=True)
     participant = serializers.SerializerMethodField()
     instructor = serializers.SerializerMethodField()
-    role = serializers.CharField(write_only=True)
+    role = serializers.ChoiceField(choices=ROLE_CHOICES, write_only=True)
     university = serializers.CharField(write_only=True, required=False)
     accepted = serializers.NullBooleanField(write_only=True, required=False)
     company = serializers.CharField(write_only=True, required=False)
@@ -69,8 +70,8 @@ class UserSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("First name or last name should not have number.")
 
         role = data.get('role')
-        if role not in ['participant', 'instructor']:
-            raise serializers.ValidationError("Role should be participant or instructor.")
+        #if role not in ['participant', 'instructor']:
+        #    raise serializers.ValidationError("Role should be participant or instructor.")
         if role == 'participant' and data.get('accepted', None) == None:
             raise serializers.ValidationError("For participants, accepted should be given.")
         return data
