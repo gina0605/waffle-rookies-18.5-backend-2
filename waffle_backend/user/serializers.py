@@ -104,6 +104,15 @@ class UserSerializer(serializers.ModelSerializer):
         return user
 
     def update(self, instance, validated_data):
+        if hasattr(instance, 'participant'):
+            participant = instance.participant
+            participant.university = validated_data.get('university', participant.university)
+            participant.save()
+        if hasattr(instance, 'instructor'):
+            instructor = instance.instructor
+            instructor.company = validated_data.get('company', instructor.company)
+            instructor.year = validated_data.get('year', instructor.year)
+            instructor.save()
         super(UserSerializer, self).update(instance, validated_data)
 
 
