@@ -17,6 +17,7 @@ class UserSerializer(serializers.ModelSerializer):
     date_joined = serializers.DateTimeField(read_only=True)
     participant = serializers.SerializerMethodField()
     instructor = serializers.SerializerMethodField()
+
     role = serializers.ChoiceField(choices=ROLE_CHOICES, write_only=True)
     university = serializers.CharField(write_only=True, required=False)
     accepted = serializers.NullBooleanField(write_only=True, required=False)
@@ -65,12 +66,18 @@ class UserSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("First name or last name should not have number.")
 
         role = data.get('role')
-        if role == 'participant':
-            print(data)
-            serializer = ParticipantProfileSerializer(data=data)
+        serializer = None
+        if not role:
+            if hasattr(self.instance, 'participant'):
+                ParticipantProfileSerializer(data=data).is_valid(raise_exception=True)
+            if hasattr(self.instance, 'instructor'):
+                InstructorProfileSerializer(data=data).is_valid(raise_exception=True)
         else:
-            serializer = InstructorProfileSerializer(data=data)
-        serializer.is_valid(raise_exception=True)
+            if role == 'participant':
+                serializer = ParticipantProfileSerializer(data=data)
+            elif role == 'instructor':
+                serializer = InstructorProfileSerializer(data=data)
+            serializer.is_valid(raise_exception=True)
 
         return data
 
@@ -80,18 +87,14 @@ class UserSerializer(serializers.ModelSerializer):
         accepted = validated_data.pop('accepted', None)
         company = validated_data.pop('company', '')
         year = validated_data.pop('year', None)
-        print("creating")
         user = super(UserSerializer, self).create(validated_data)
-        print("user created")
         Token.objects.create(user=user)
         if role == 'participant':
-            print('trying to create participant')
             ParticipantProfile.objects.create(
                 user=user,
                 university=university,
                 accepted=accepted,
             )
-            print('participant created')
         elif role == 'instructor':
             InstructorProfile.objects.create(
                 user=user,
