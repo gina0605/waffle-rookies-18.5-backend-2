@@ -6,7 +6,7 @@ class ParticipantProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE,
                                 related_name='participant')
     university = models.CharField(max_length=50, blank=True)
-    accepted = models.BooleanField(default=None)
+    accepted = models.BooleanField()
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

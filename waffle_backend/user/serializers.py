@@ -56,11 +56,6 @@ class UserSerializer(serializers.ModelSerializer):
     def validate_password(self, value):
         return make_password(value)
 
-    def validate_year(self, value):
-        if value < 0:
-            raise serializers.ValidationError("Year should be zero or positive.")
-        return value
-
     def validate(self, data):
         first_name = data.get('first_name')
         last_name = data.get('last_name')
@@ -70,10 +65,13 @@ class UserSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("First name or last name should not have number.")
 
         role = data.get('role')
-        #if role not in ['participant', 'instructor']:
-        #    raise serializers.ValidationError("Role should be participant or instructor.")
-        if role == 'participant' and data.get('accepted', None) == None:
-            raise serializers.ValidationError("For participants, accepted should be given.")
+        if role == 'participant':
+            print(data)
+            serializer = ParticipantProfileSerializer(data=data)
+        else:
+            serializer = InstructorProfileSerializer(data=data)
+        serializer.is_valid(raise_exception=True)
+
         return data
 
     def create(self, validated_data):
@@ -82,14 +80,18 @@ class UserSerializer(serializers.ModelSerializer):
         accepted = validated_data.pop('accepted', None)
         company = validated_data.pop('company', '')
         year = validated_data.pop('year', None)
+        print("creating")
         user = super(UserSerializer, self).create(validated_data)
+        print("user created")
         Token.objects.create(user=user)
         if role == 'participant':
+            print('trying to create participant')
             ParticipantProfile.objects.create(
                 user=user,
                 university=university,
                 accepted=accepted,
             )
+            print('participant created')
         elif role == 'instructor':
             InstructorProfile.objects.create(
                 user=user,
@@ -97,6 +99,9 @@ class UserSerializer(serializers.ModelSerializer):
                 year=year,
             )
         return user
+
+    def update(self, instance, validated_data):
+        super(UserSerializer, self).update(instance, validated_data)
 
 
 class ParticipantProfileSerializer(serializers.ModelSerializer):
