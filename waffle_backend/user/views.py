@@ -20,11 +20,6 @@ class UserViewSet(viewsets.GenericViewSet):
             return (AllowAny(), )
         return self.permission_classes
 
-    def get_serializer_class(self):
-        if self.action == 'participant':
-            return WriteParticipantProfileSerializer
-        return UserSerializer
-
     def create(self, request):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -84,8 +79,8 @@ class UserViewSet(viewsets.GenericViewSet):
         data = request.data.copy()
         data['user'] = user.pk
         print(data)
-        serializer = self.get_serializer(data=data)
-        print(serializer)
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
+        participantserializer = WriteParticipantProfileSerializer(data=data)
+        print(participantserializer)
+        participantserializer.is_valid(raise_exception=True)
+        participantserializer.save()
+        return Response(self.get_serializer(user).data, status=status.HTTP_201_CREATED)
