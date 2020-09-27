@@ -7,7 +7,7 @@ from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 
-from user.serializers import UserSerializer
+from user.serializers import UserSerializer, WriteParticipantProfileSerializer
 
 
 class UserViewSet(viewsets.GenericViewSet):
@@ -19,6 +19,11 @@ class UserViewSet(viewsets.GenericViewSet):
         if self.action in ('create', 'login'):
             return (AllowAny(), )
         return self.permission_classes
+
+    def get_serializer_class(self):
+        if self.action == 'participant':
+            return WriteParticipantProfileSerializer
+        return UserSerializer
 
     def create(self, request):
         serializer = self.get_serializer(data=request.data)
@@ -70,3 +75,17 @@ class UserViewSet(viewsets.GenericViewSet):
         serializer.is_valid(raise_exception=True)
         serializer.update(user, serializer.validated_data)
         return Response(serializer.data)
+
+    @action(detail=False, methods=['POST'])
+    def participant(self, request):
+        user = request.user
+        if hasattr(user, 'participant'):
+            return Response({"error": "Already a participant"}, status=status.HTTP_400_BAD_REQUEST)
+        data = request.data.copy()
+        data['user'] = user.pk
+        print(data)
+        serializer = self.get_serializer(data=data)
+        print(serializer)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_201_CREATED)

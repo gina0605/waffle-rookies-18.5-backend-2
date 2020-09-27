@@ -46,12 +46,12 @@ class UserSerializer(serializers.ModelSerializer):
 
     def get_participant(self, user):
         if hasattr(user, 'participant'):
-            return ParticipantProfileSerializer(user.participant, context=self.context).data
+            return ReadParticipantProfileSerializer(user.participant, context=self.context).data
         return None
 
     def get_instructor(self, user):
         if hasattr(user, 'instructor'):
-            return InstructorProfileSerializer(user.instructor, context=self.context).data
+            return ReadInstructorProfileSerializer(user.instructor, context=self.context).data
         return None
 
     def validate_password(self, value):
@@ -69,14 +69,14 @@ class UserSerializer(serializers.ModelSerializer):
         serializer = None
         if not role:
             if hasattr(self.instance, 'participant'):
-                ParticipantProfileSerializer(data=data).is_valid(raise_exception=True)
+                ReadParticipantProfileSerializer(data=data).is_valid(raise_exception=True)
             if hasattr(self.instance, 'instructor'):
-                InstructorProfileSerializer(data=data).is_valid(raise_exception=True)
+                ReadInstructorProfileSerializer(data=data).is_valid(raise_exception=True)
         else:
             if role == 'participant':
-                serializer = ParticipantProfileSerializer(data=data)
+                serializer = ReadParticipantProfileSerializer(data=data)
             elif role == 'instructor':
-                serializer = InstructorProfileSerializer(data=data)
+                serializer = ReadInstructorProfileSerializer(data=data)
             serializer.is_valid(raise_exception=True)
 
         return data
@@ -106,17 +106,17 @@ class UserSerializer(serializers.ModelSerializer):
     def update(self, instance, validated_data):
         if hasattr(instance, 'participant'):
             participant = instance.participant
-            participant.university = validated_data.get('university', participant.university)
+            participant.university = validated_data.pop('university', participant.university)
             participant.save()
         if hasattr(instance, 'instructor'):
             instructor = instance.instructor
-            instructor.company = validated_data.get('company', instructor.company)
-            instructor.year = validated_data.get('year', instructor.year)
+            instructor.company = validated_data.pop('company', instructor.company)
+            instructor.year = validated_data.pop('year', instructor.year)
             instructor.save()
         super(UserSerializer, self).update(instance, validated_data)
 
 
-class ParticipantProfileSerializer(serializers.ModelSerializer):
+class ReadParticipantProfileSerializer(serializers.ModelSerializer):
     seminars = serializers.SerializerMethodField()
 
     class Meta:
@@ -134,7 +134,7 @@ class ParticipantProfileSerializer(serializers.ModelSerializer):
         return ParticipantSeminarSerializer(queryset, many=True).data
 
 
-class InstructorProfileSerializer(serializers.ModelSerializer):
+class ReadInstructorProfileSerializer(serializers.ModelSerializer):
     charge = serializers.SerializerMethodField()
 
     class Meta:
@@ -150,3 +150,13 @@ class InstructorProfileSerializer(serializers.ModelSerializer):
         user = participant.user
         queryset = UserSeminar.objects.filter(user=user, role='instructor')
         return InstructorSeminarSerializer(queryset, many=True).data
+
+class WriteParticipantProfileSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ParticipantProfile
+        fields = (
+            'id',
+            'user',
+            'university',
+            'accepted',
+        )
