@@ -51,7 +51,7 @@ class UserSerializer(serializers.ModelSerializer):
 
     def get_instructor(self, user):
         if hasattr(user, 'instructor'):
-            return ReadInstructorProfileSerializer(user.instructor, context=self.context).data
+            return InstructorProfileSerializer(user.instructor, context=self.context).data
         return None
 
     def validate_password(self, value):
@@ -71,12 +71,12 @@ class UserSerializer(serializers.ModelSerializer):
             if hasattr(self.instance, 'participant'):
                 ParticipantProfileSerializer(data=data).is_valid(raise_exception=True)
             if hasattr(self.instance, 'instructor'):
-                ReadInstructorProfileSerializer(data=data).is_valid(raise_exception=True)
+                InstructorProfileSerializer(data=data).is_valid(raise_exception=True)
         else:
             if role == 'participant':
                 serializer = ParticipantProfileSerializer(data=data)
             elif role == 'instructor':
-                serializer = ReadInstructorProfileSerializer(data=data)
+                serializer = InstructorProfileSerializer(data=data)
             serializer.is_valid(raise_exception=True)
 
         return data
@@ -136,25 +136,7 @@ class ParticipantProfileSerializer(serializers.ModelSerializer):
         return ParticipantSeminarSerializer(queryset, many=True).data
 
 
-class ReadParticipantProfileSerializer(serializers.ModelSerializer):
-    seminars = serializers.SerializerMethodField()
-
-    class Meta:
-        model = ParticipantProfile
-        fields = (
-            'id',
-            'university',
-            'accepted',
-            'seminars',
-        )
-
-    def get_seminars(self, participant):
-        user = participant.user
-        queryset = UserSeminar.objects.filter(user=user, role='participant')
-        return ParticipantSeminarSerializer(queryset, many=True).data
-
-
-class ReadInstructorProfileSerializer(serializers.ModelSerializer):
+class InstructorProfileSerializer(serializers.ModelSerializer):
     charge = serializers.SerializerMethodField()
 
     class Meta:
@@ -170,13 +152,3 @@ class ReadInstructorProfileSerializer(serializers.ModelSerializer):
         user = participant.user
         queryset = UserSeminar.objects.filter(user=user, role='instructor')
         return InstructorSeminarSerializer(queryset, many=True).data
-
-class WriteParticipantProfileSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = ParticipantProfile
-        fields = (
-            'id',
-            'user',
-            'university',
-            'accepted',
-        )
