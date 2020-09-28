@@ -1,5 +1,6 @@
 from django.contrib.auth.hashers import make_password
 from django.contrib.auth.models import User
+from django.core.exceptions import ObjectDoesNotExist
 from rest_framework import serializers
 from rest_framework.authtoken.models import Token
 from user.models import ParticipantProfile, InstructorProfile
@@ -151,5 +152,8 @@ class InstructorProfileSerializer(serializers.ModelSerializer):
 
     def get_charge(self, participant):
         user = participant.user
-        queryset = UserSeminar.objects.filter(user=user, role='instructor')
-        return InstructorSeminarSerializer(queryset, many=True).data
+        try:
+            queryset = UserSeminar.objects.get(user=user, role='instructor')
+        except ObjectDoesNotExist:
+            return None
+        return InstructorSeminarSerializer(queryset).data
