@@ -4,6 +4,7 @@ from seminar.models import Seminar, UserSeminar
 
 class SeminarSerializer(serializers.ModelSerializer):
     instructors = serializers.SerializerMethodField()
+    participants = serializers.SerializerMethodField()
 
     class Meta:
         model = Seminar
@@ -16,12 +17,16 @@ class SeminarSerializer(serializers.ModelSerializer):
             'start_date',
             'online',
             'instructors',
+            'participants',
         )
 
     def get_instructors(self, seminar):
-        print("getting instructors")
         queryset = UserSeminar.objects.filter(seminar=seminar, role='instructor')
         return SeminarInstructorSerializer(queryset, many=True).data
+
+    def get_participants(self, seminar):
+        queryset = UserSeminar.objects.filter(seminar=seminar, role='participant')
+        return SeminarParticipantSerializer(queryset, many=True).data
 
 
 class ParticipantSeminarSerializer(serializers.ModelSerializer):
@@ -69,6 +74,25 @@ class InstructorSeminarSerializer(serializers.ModelSerializer):
 
 
 class SeminarInstructorSerializer(serializers.ModelSerializer):
+    id = serializers.SerializerMethodField()
+    joined_at = serializers.SerializerMethodField()
+
+    class Meta:
+        model = UserSeminar
+        fields = (
+            'id',
+            'joined_at',
+        )
+
+    def get_id(self, userseminar):
+        print(userseminar.user)
+        return userseminar.user.id
+
+    def get_joined_at(self, userseminar):
+        return userseminar.created_at
+
+
+class SeminarParticipantSerializer(serializers.ModelSerializer):
     joined_at = serializers.SerializerMethodField()
 
     class Meta:
