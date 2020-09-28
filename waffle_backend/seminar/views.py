@@ -3,7 +3,7 @@ from rest_framework import status, viewsets
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from seminar.models import Seminar, UserSeminar
-from seminar.serializers import SeminarSerializer
+from seminar.serializers import SeminarSerializer, SimpleSeminarSerializer
 
 
 class SeminarViewSet(viewsets.GenericViewSet):
@@ -16,6 +16,11 @@ class SeminarViewSet(viewsets.GenericViewSet):
             return (AllowAny(), )
         else:
             return super(SeminarViewSet, self).get_permissions()
+
+    def get_serializer_class(self):
+        if self.action == 'list':
+            return SimpleSeminarSerializer
+        return self.serializer_class
 
     def create(self, request):
         user = request.user
@@ -56,5 +61,9 @@ class SeminarViewSet(viewsets.GenericViewSet):
         return Response(self.get_serializer(seminar).data)
 
     def list(self, request):
-        seminars = self.get_queryset().prefetch_related('user_seminar')
+        param = request.query_params
+        name = param.get('name', '')
+        seminars = self.get_queryset().filter(name__contains=name)
+        if param.get('order', '') == 'earliest':
+            seminars.order_by('created_at')
         return Response(self.get_serializer(seminars, many=True).data)
