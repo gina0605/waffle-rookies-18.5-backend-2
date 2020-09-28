@@ -12,6 +12,7 @@ class SeminarSerializer(serializers.ModelSerializer):
         fields = (
             'id',
             'name',
+            'description',
             'capacity',
             'count',
             'time',
