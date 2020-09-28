@@ -1,6 +1,28 @@
 from rest_framework import serializers
-from seminar.models import UserSeminar
-from django.contrib.auth.models import User
+from seminar.models import Seminar, UserSeminar
+
+
+class SeminarSerializer(serializers.ModelSerializer):
+    instructors = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Seminar
+        fields = (
+            'id',
+            'name',
+            'capacity',
+            'count',
+            'time',
+            'start_date',
+            'online',
+            'instructors',
+        )
+
+    def get_instructors(self, seminar):
+        print("getting instructors")
+        queryset = UserSeminar.objects.filter(seminar=seminar, role='instructor')
+        return SeminarInstructorSerializer(queryset, many=True).data
+
 
 class ParticipantSeminarSerializer(serializers.ModelSerializer):
     name = serializers.SerializerMethodField()
@@ -41,6 +63,19 @@ class InstructorSeminarSerializer(serializers.ModelSerializer):
 
     def get_name(self, userseminar):
         return userseminar.seminar.name
+
+    def get_joined_at(self, userseminar):
+        return userseminar.created_at
+
+
+class SeminarInstructorSerializer(serializers.ModelSerializer):
+    joined_at = serializers.SerializerMethodField()
+
+    class Meta:
+        model = UserSeminar
+        fields = (
+            'joined_at',
+        )
 
     def get_joined_at(self, userseminar):
         return userseminar.created_at

@@ -65,7 +65,7 @@ class UserSerializer(serializers.ModelSerializer):
         if first_name and last_name and not (first_name.isalpha() and last_name.isalpha()):
             raise serializers.ValidationError("First name or last name should not have number.")
 
-        role = data.get('role')
+        role = data.pop('role')
         serializer = None
         if not role:
             if hasattr(self.instance, 'participant'):

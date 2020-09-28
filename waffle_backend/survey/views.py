@@ -27,7 +27,6 @@ class SurveyResultViewSet(viewsets.GenericViewSet):
     def create(self, request):
         data = request.data.copy()
         data.update(os_name=data.get('os'))
-        print(data)
 
         serializer = self.get_serializer(data=data)
         serializer.is_valid(raise_exception=True)
