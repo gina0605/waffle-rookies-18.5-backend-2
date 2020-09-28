@@ -30,8 +30,8 @@ class SeminarSerializer(serializers.ModelSerializer):
 
 
 class ParticipantSeminarSerializer(serializers.ModelSerializer):
-    name = serializers.SerializerMethodField()
-    joined_at = serializers.SerializerMethodField()
+    name = serializers.CharField(source='seminar.name')
+    joined_at = serializers.DateTimeField(source='created_at')
     is_active = serializers.SerializerMethodField()
 
     class Meta:
@@ -44,19 +44,13 @@ class ParticipantSeminarSerializer(serializers.ModelSerializer):
             'dropped_at',
         )
 
-    def get_name(self, userseminar):
-        return userseminar.seminar.name
-
-    def get_joined_at(self, userseminar):
-        return userseminar.created_at
-
     def get_is_active(self, userseminar):
         return userseminar.dropped_at == None
 
 
 class InstructorSeminarSerializer(serializers.ModelSerializer):
-    name = serializers.SerializerMethodField()
-    joined_at = serializers.SerializerMethodField()
+    name = serializers.CharField(source='seminar.name')
+    joined_at = serializers.DateTimeField(source='created_at')
 
     class Meta:
         model = UserSeminar
@@ -66,16 +60,10 @@ class InstructorSeminarSerializer(serializers.ModelSerializer):
             'joined_at',
         )
 
-    def get_name(self, userseminar):
-        return userseminar.seminar.name
-
-    def get_joined_at(self, userseminar):
-        return userseminar.created_at
-
 
 class SeminarInstructorSerializer(serializers.ModelSerializer):
-    id = serializers.SerializerMethodField()
-    joined_at = serializers.SerializerMethodField()
+    id = serializers.IntegerField(source='user.id')
+    joined_at = serializers.DateTimeField(source='created_at')
 
     class Meta:
         model = UserSeminar
@@ -84,22 +72,12 @@ class SeminarInstructorSerializer(serializers.ModelSerializer):
             'joined_at',
         )
 
-    def get_id(self, userseminar):
-        print(userseminar.user)
-        return userseminar.user.id
-
-    def get_joined_at(self, userseminar):
-        return userseminar.created_at
-
 
 class SeminarParticipantSerializer(serializers.ModelSerializer):
-    joined_at = serializers.SerializerMethodField()
+    joined_at = serializers.DateTimeField(source='created_at')
 
     class Meta:
         model = UserSeminar
         fields = (
             'joined_at',
         )
-
-    def get_joined_at(self, userseminar):
-        return userseminar.created_at
