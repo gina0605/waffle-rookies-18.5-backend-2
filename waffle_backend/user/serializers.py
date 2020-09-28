@@ -17,7 +17,6 @@ class UserSerializer(serializers.ModelSerializer):
     date_joined = serializers.DateTimeField(read_only=True)
     participant = serializers.SerializerMethodField()
     instructor = serializers.SerializerMethodField()
-
     role = serializers.ChoiceField(choices=ROLE_CHOICES, write_only=True)
     university = serializers.CharField(write_only=True, required=False)
     accepted = serializers.NullBooleanField(write_only=True, required=False)
@@ -65,7 +64,7 @@ class UserSerializer(serializers.ModelSerializer):
         if first_name and last_name and not (first_name.isalpha() and last_name.isalpha()):
             raise serializers.ValidationError("First name or last name should not have number.")
 
-        role = data.pop('role')
+        role = data.get('role')
         serializer = None
         if not role:
             if hasattr(self.instance, 'participant'):
@@ -73,10 +72,12 @@ class UserSerializer(serializers.ModelSerializer):
             if hasattr(self.instance, 'instructor'):
                 InstructorProfileSerializer(data=data).is_valid(raise_exception=True)
         else:
+            data_copied = data.copy()
+            data_copied.update(user=None)
             if role == 'participant':
-                serializer = ParticipantProfileSerializer(data=data)
+                serializer = ParticipantProfileSerializer(data=data_copied)
             elif role == 'instructor':
-                serializer = InstructorProfileSerializer(data=data)
+                serializer = InstructorProfileSerializer(data=data_copied)
             serializer.is_valid(raise_exception=True)
 
         return data
@@ -128,7 +129,7 @@ class ParticipantProfileSerializer(serializers.ModelSerializer):
             'accepted',
             'seminars',
         )
-        extra_kwargs = {'user': {'write_only': True}}
+        extra_kwargs = {'user': {'write_only': True, 'allow_null': True}}
 
     def get_seminars(self, participant):
         user = participant.user
