@@ -37,9 +37,8 @@ class SeminarViewSet(viewsets.GenericViewSet):
         UserSeminar.objects.create(
             user=user,
             seminar=seminar,
-            role = 'instructor'
+            role='instructor',
         )
-        print("Only response left")
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     def update(self, request, pk):
@@ -51,14 +50,14 @@ class SeminarViewSet(viewsets.GenericViewSet):
                 status=status.HTTP_403_FORBIDDEN
             )
 
+        serializer = self.get_serializer(seminar, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
         participants = UserSeminar.objects.filter(seminar=seminar, role='participant').count()
-        if 'capacity' in request.data and request.data.get('capacity') < participants:
+        if 'capacity' in request.data and serializer.validated_data.get('capacity') < participants:
             return Response(
                 {"error": "Cannot set capacity less than the number of participants"},
                 status=status.HTTP_400_BAD_REQUEST
             )
-        serializer = self.get_serializer(seminar, data=request.data, partial=True)
-        serializer.is_valid(raise_exception=True)
         serializer.update(seminar, serializer.validated_data)
         return Response(serializer.data)
 
@@ -99,7 +98,11 @@ class SeminarViewSet(viewsets.GenericViewSet):
                     {"error": "The user is not accepted"},
                     status=status.HTTP_403_FORBIDDEN
                 )
-            participants = UserSeminar.objects.filter(seminar=seminar, role='participant').count()
+            participants = UserSeminar.objects.filter(
+                seminar=seminar,
+                role='participant',
+                dropped_at=None,
+            ).count()
             if participants == seminar.capacity:
                 return Response(
                     {"error": "This seminar is already full"},

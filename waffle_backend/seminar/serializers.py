@@ -50,7 +50,11 @@ class SimpleSeminarSerializer(serializers.ModelSerializer):
         return SeminarInstructorSerializer(queryset, many=True).data
 
     def get_participant_count(self, seminar):
-        return UserSeminar.objects.filter(seminar=seminar, role='instructor').count()
+        return UserSeminar.objects.filter(
+            seminar=seminar,
+            role='participant',
+            dropped_at=None,
+        ).count()
 
 
 class ParticipantSeminarSerializer(serializers.ModelSerializer):
