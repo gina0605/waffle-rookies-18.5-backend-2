@@ -1,4 +1,5 @@
 from django.core.exceptions import ObjectDoesNotExist
+from django.utils import timezone
 from rest_framework import status, viewsets
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
@@ -73,11 +74,16 @@ class SeminarViewSet(viewsets.GenericViewSet):
             seminars.order_by('created_at')
         return Response(self.get_serializer(seminars, many=True).data)
 
-    @action(detail=True, methods=['POST'])
+    @action(detail=True, methods=['POST', 'DELETE'])
     def user(self, request, pk):
         user = request.user
         seminar = self.get_object()
-        role = request.data.get('role', '')
+        if request.method == 'POST':
+            return self.attend_seminar(user, seminar, role = request.data.get('role', ''))
+        elif request.method == 'DELETE':
+            return self.drop_seminar(user, seminar)
+
+    def attend_seminar(self, user, seminar, role):
         if role not in ('participant', 'instructor'):
             return Response(
                 {"error": "Role should be participant or instructor"},
@@ -87,11 +93,20 @@ class SeminarViewSet(viewsets.GenericViewSet):
                 {"error": "The user is not a {}".format(role)},
                 status=status.HTTP_403_FORBIDDEN
             )
-        if UserSeminar.objects.filter(user=user, seminar=seminar).exists():
-            return Response(
-                {"error": "The user is already a member of the seminar"},
-                status=status.HTTP_400_BAD_REQUEST
-            )
+        try:
+            userseminar = UserSeminar.objects.filter(user=user, seminar=seminar)
+            if userseminar.dropped_at is None:
+                return Response(
+                    {"error": "The user have already dropped out from the seminar"},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            else:
+                return Response(
+                    {"error": "The user is already a member of the seminar"},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+        except ObjectDoesNotExist:
+            pass
         if role == 'participant':
             if not user.participant.accepted:
                 return Response(
@@ -121,3 +136,23 @@ class SeminarViewSet(viewsets.GenericViewSet):
             role=role,
         )
         return Response(self.get_serializer(seminar).data, status=status.HTTP_201_CREATED)
+
+    def drop_seminar(self, user, seminar):
+        print(user, seminar)
+        try:
+            userseminar = UserSeminar.objects.get(user=user, seminar=seminar)
+        except ObjectDoesNotExist:
+            return Response()
+        if userseminar.dropped_at is not None:
+            return Response(
+                {"error": "The user have already dropped out from the seminar"},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        if userseminar.role == 'instructor':
+            return Response(
+                {"error": "Instructors cannot drop seminar"},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        userseminar.dropped_at = timezone.now()
+        userseminar.save()
+        return Response(self.get_serializer(userseminar))

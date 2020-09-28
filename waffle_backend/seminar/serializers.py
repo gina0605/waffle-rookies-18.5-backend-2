@@ -77,6 +77,7 @@ class ParticipantSeminarSerializer(serializers.ModelSerializer):
 
 
 class InstructorSeminarSerializer(serializers.ModelSerializer):
+    id = serializers.IntegerField(source='seminar.id')
     name = serializers.CharField(source='seminar.name')
     joined_at = serializers.DateTimeField(source='created_at')
 
