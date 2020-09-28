@@ -16,7 +16,8 @@ class SeminarViewSet(viewsets.GenericViewSet):
     def create(self, request):
         user = request.user
         if not hasattr(user, 'instructor'):
-            Response({"error": "Only instructors can create seminars"}, status=status.HTTP_403_FORBIDDEN)
+            return Response({"error": "Only instructors can create seminars"}, status=status.HTTP_403_FORBIDDEN)
+        print(user.instructor)
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         seminar = serializer.save()

@@ -77,8 +77,9 @@ class UserViewSet(viewsets.GenericViewSet):
         if hasattr(user, 'participant'):
             return Response({"error": "Already a participant"}, status=status.HTTP_400_BAD_REQUEST)
         data = request.data.copy()
-        data['user'] = user.pk
+        data.update(user=user.pk)
         serializer = ParticipantProfileSerializer(data=data)
         serializer.is_valid(raise_exception=True)
         serializer.save()
+        user.refresh_from_db()
         return Response(self.get_serializer(user).data, status=status.HTTP_201_CREATED)
