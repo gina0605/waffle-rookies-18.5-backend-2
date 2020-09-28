@@ -5,6 +5,7 @@ from seminar.models import Seminar, UserSeminar
 class SeminarSerializer(serializers.ModelSerializer):
     instructors = serializers.SerializerMethodField()
     participants = serializers.SerializerMethodField()
+    online = serializers.BooleanField(default=True)
 
     class Meta:
         model = Seminar
@@ -63,21 +64,45 @@ class InstructorSeminarSerializer(serializers.ModelSerializer):
 
 class SeminarInstructorSerializer(serializers.ModelSerializer):
     id = serializers.IntegerField(source='user.id')
+    username = serializers.CharField(source='user.username')
+    email = serializers.EmailField(source='user.email')
+    first_name = serializers.CharField(source='user.first_name')
+    last_name = serializers.CharField(source='user.last_name')
     joined_at = serializers.DateTimeField(source='created_at')
 
     class Meta:
         model = UserSeminar
         fields = (
             'id',
+            'username',
+            'email',
+            'first_name',
+            'last_name',
             'joined_at',
         )
 
 
 class SeminarParticipantSerializer(serializers.ModelSerializer):
+    id = serializers.IntegerField(source='user.id')
+    username = serializers.CharField(source='user.username')
+    email = serializers.EmailField(source='user.email')
+    first_name = serializers.CharField(source='user.first_name')
+    last_name = serializers.CharField(source='user.last_name')
     joined_at = serializers.DateTimeField(source='created_at')
+    is_active = serializers.SerializerMethodField()
 
     class Meta:
         model = UserSeminar
         fields = (
+            'id',
+            'username',
+            'email',
+            'first_name',
+            'last_name',
             'joined_at',
+            'is_active',
+            'dropped_at',
         )
+
+    def get_is_active(self, userseminar):
+        return userseminar.dropped_at is None
