@@ -1,5 +1,6 @@
 from django.core.exceptions import ObjectDoesNotExist
 from django.utils import timezone
+from django.db.models import Prefetch, Count, Q
 from rest_framework import status, viewsets
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
@@ -73,7 +74,21 @@ class SeminarViewSet(viewsets.GenericViewSet):
     def list(self, request):
         param = request.query_params
         name = param.get('name', '')
-        seminars = self.get_queryset().filter(name__contains=name)
+        seminars = self.get_queryset()\
+            .filter(name__contains=name)\
+            .prefetch_related(
+                Prefetch(
+                    'user_seminar',
+                    queryset=UserSeminar.objects.filter(role='instructor'),
+                    to_attr='userseminar_instructors'
+                )
+            ).prefetch_related('userseminar_instructors__user')
+        seminars = seminars.annotate(
+            participant_count=Count(
+                'user_seminar',
+                filter=Q(user_seminar__role='participant')&Q(user_seminar__dropped_at=None)
+            )
+        )
         if param.get('order', '') == 'earliest':
             seminars = seminars.order_by('created_at')
         else:
