@@ -26,7 +26,10 @@ class UserViewSet(viewsets.GenericViewSet):
         try:
             user = serializer.save()
         except IntegrityError:
-            return Response({"error": "A user with that username already exists."}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {"error": "A user with that username already exists."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
         login(request, user)
 

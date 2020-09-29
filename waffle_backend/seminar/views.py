@@ -31,7 +31,11 @@ class SeminarViewSet(viewsets.GenericViewSet):
                 {"error": "Only instructors can create seminars"},
                 status=status.HTTP_403_FORBIDDEN
             )
-        print(user.instructor)
+        if UserSeminar.objects.filter(user=user, role='instructor').exists():
+            return Response(
+                {"error": "The user is an instructor of another seminar"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         seminar = serializer.save()
@@ -71,7 +75,9 @@ class SeminarViewSet(viewsets.GenericViewSet):
         name = param.get('name', '')
         seminars = self.get_queryset().filter(name__contains=name)
         if param.get('order', '') == 'earliest':
-            seminars.order_by('created_at')
+            seminars = seminars.order_by('created_at')
+        else:
+            seminars = seminars.order_by('-created_at')
         return Response(self.get_serializer(seminars, many=True).data)
 
     @action(detail=True, methods=['POST', 'DELETE'])
