@@ -19,10 +19,10 @@ class UserSerializer(serializers.ModelSerializer):
     participant = serializers.SerializerMethodField()
     instructor = serializers.SerializerMethodField()
     role = serializers.ChoiceField(choices=ROLE_CHOICES, write_only=True)
-    university = serializers.CharField(write_only=True, required=False)
+    university = serializers.CharField(allow_blank=True, write_only=True, required=False)
     accepted = serializers.NullBooleanField(write_only=True, required=False)
-    company = serializers.CharField(write_only=True, required=False)
-    year = serializers.IntegerField(write_only=True, required=False)
+    company = serializers.CharField(allow_blank=True, write_only=True, required=False)
+    year = serializers.IntegerField(allow_null=True, write_only=True, required=False)
 
     class Meta:
         model = User
