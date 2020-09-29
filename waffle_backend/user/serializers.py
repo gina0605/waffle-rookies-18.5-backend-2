@@ -67,19 +67,20 @@ class UserSerializer(serializers.ModelSerializer):
 
         role = data.get('role')
         serializer = None
+        data_copied = data.copy()
         if not role:
             if hasattr(self.instance, 'participant'):
-                ParticipantProfileSerializer(data=data).is_valid(raise_exception=True)
+                data_copied.pop('accepted', None)
+                serializer = ParticipantProfileSerializer(self.instance.participant, data=data_copied, partial=True)
             if hasattr(self.instance, 'instructor'):
-                InstructorProfileSerializer(data=data).is_valid(raise_exception=True)
+                serializer = InstructorProfileSerializer(self.instance.participant, data=data_copied, partial=True)
         else:
-            data_copied = data.copy()
             data_copied.update(user=None)
             if role == 'participant':
                 serializer = ParticipantProfileSerializer(data=data_copied)
             elif role == 'instructor':
                 serializer = InstructorProfileSerializer(data=data_copied)
-            serializer.is_valid(raise_exception=True)
+        serializer.is_valid(raise_exception=True)
 
         return data
 

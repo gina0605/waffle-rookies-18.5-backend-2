@@ -175,4 +175,4 @@ class SeminarViewSet(viewsets.GenericViewSet):
             )
         userseminar.dropped_at = timezone.now()
         userseminar.save()
-        return Response(self.get_serializer(userseminar))
+        return Response(self.get_serializer(seminar))

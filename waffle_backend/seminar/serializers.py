@@ -52,14 +52,10 @@ class SimpleSeminarSerializer(serializers.ModelSerializer):
 
     def get_participant_count(self, seminar):
         return seminar.participant_count
-        return UserSeminar.objects.filter(
-            seminar=seminar,
-            role='participant',
-            dropped_at=None,
-        ).count()
 
 
 class ParticipantSeminarSerializer(serializers.ModelSerializer):
+    id = serializers.IntegerField(source='seminar.id')
     name = serializers.CharField(source='seminar.name')
     joined_at = serializers.DateTimeField(source='created_at')
     is_active = serializers.SerializerMethodField()
