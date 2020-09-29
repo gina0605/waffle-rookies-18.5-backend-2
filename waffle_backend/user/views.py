@@ -81,6 +81,8 @@ class UserViewSet(viewsets.GenericViewSet):
             return Response({"error": "Already a participant"}, status=status.HTTP_400_BAD_REQUEST)
         data = request.data.copy()
         data.update(user=user.pk)
+        if data.get('accepted', '') == '':
+            data.pop('accepted', '')
         serializer = ParticipantProfileSerializer(data=data)
         serializer.is_valid(raise_exception=True)
         serializer.save()

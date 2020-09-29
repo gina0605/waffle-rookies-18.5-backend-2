@@ -100,7 +100,7 @@ class SeminarViewSet(viewsets.GenericViewSet):
                 status=status.HTTP_403_FORBIDDEN
             )
         try:
-            userseminar = UserSeminar.objects.filter(user=user, seminar=seminar)
+            userseminar = UserSeminar.objects.get(user=user, seminar=seminar)
             if userseminar.dropped_at is None:
                 return Response(
                     {"error": "The user have already dropped out from the seminar"},
@@ -144,7 +144,6 @@ class SeminarViewSet(viewsets.GenericViewSet):
         return Response(self.get_serializer(seminar).data, status=status.HTTP_201_CREATED)
 
     def drop_seminar(self, user, seminar):
-        print(user, seminar)
         try:
             userseminar = UserSeminar.objects.get(user=user, seminar=seminar)
         except ObjectDoesNotExist:
