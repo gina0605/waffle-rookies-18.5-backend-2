@@ -3,6 +3,8 @@ from seminar.models import Seminar, UserSeminar
 
 
 class SeminarSerializer(serializers.ModelSerializer):
+    description = serializers.CharField(allow_blank=True, required=False)
+    time = serializers.TimeField(format='%H:%M', input_formats=['%H:%M',])
     instructors = serializers.SerializerMethodField()
     participants = serializers.SerializerMethodField()
     online = serializers.BooleanField(default=True)
