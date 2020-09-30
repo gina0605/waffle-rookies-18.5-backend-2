@@ -86,7 +86,7 @@ class SeminarViewSet(viewsets.GenericViewSet):
         seminars = seminars.annotate(
             participant_count=Count(
                 'user_seminar',
-                filter=Q(user_seminar__role='participant')&Q(user_seminar__dropped_at=None)
+                filter=Q(user_seminar__role='participant') & Q(user_seminar__dropped_at=None)
             )
         )
         if param.get('order', '') == 'earliest':
@@ -100,7 +100,7 @@ class SeminarViewSet(viewsets.GenericViewSet):
         user = request.user
         seminar = self.get_object()
         if request.method == 'POST':
-            return self.attend_seminar(user, seminar, role = request.data.get('role', ''))
+            return self.attend_seminar(user, seminar, role=request.data.get('role', ''))
         elif request.method == 'DELETE':
             return self.drop_seminar(user, seminar)
 
