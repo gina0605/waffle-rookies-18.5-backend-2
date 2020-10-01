@@ -45,7 +45,35 @@ class PostUserTestCase(TestCase):
         self.assertEqual(user_count, 1)
 
     def test_post_user_incomplete_request(self):
-        response = self.client.post(
+        response = self.client.post(        # No username
+            '/api/v1/user/',
+            json.dumps({
+                "password": "password",
+                "first_name": "Davin",
+                "last_name": "Byeon",
+                "email": "bdv111@snu.ac.kr",
+                "role": "wrong_role",
+                "university": "서울대학교"
+            }),
+            content_type='application/json'
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+        response = self.client.post(        # No password
+            '/api/v1/user/',
+            json.dumps({
+                "username": "participant",
+                "first_name": "Davin",
+                "last_name": "Byeon",
+                "email": "bdv111@snu.ac.kr",
+                "role": "wrong_role",
+                "university": "서울대학교"
+            }),
+            content_type='application/json'
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+        response = self.client.post(        # Wrong role
             '/api/v1/user/',
             json.dumps({
                 "username": "participant",
@@ -60,7 +88,7 @@ class PostUserTestCase(TestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
-        response = self.client.post(
+        response = self.client.post(        # No role
             '/api/v1/user/',
             json.dumps({
                 "username": "participant",
@@ -74,7 +102,7 @@ class PostUserTestCase(TestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
-        response = self.client.post(
+        response = self.client.post(        # No email
             '/api/v1/user/',
             json.dumps({
                 "username": "participant",
