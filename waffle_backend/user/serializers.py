@@ -74,7 +74,7 @@ class UserSerializer(serializers.ModelSerializer):
                 serializer = ParticipantProfileSerializer(self.instance.participant, data=data_copied, partial=True)
                 serializer.is_valid(raise_exception=True)
             if hasattr(self.instance, 'instructor'):
-                serializer = InstructorProfileSerializer(self.instance.participant, data=data_copied, partial=True)
+                serializer = InstructorProfileSerializer(self.instance.instructor, data=data_copied, partial=True)
                 serializer.is_valid(raise_exception=True)
         else:
             data_copied.update(user=None)
@@ -89,7 +89,7 @@ class UserSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         role = validated_data.pop('role')
         university = validated_data.pop('university', '')
-        accepted = validated_data.pop('accepted', None)
+        accepted = validated_data.pop('accepted', True)
         company = validated_data.pop('company', '')
         year = validated_data.pop('year', None)
         user = super(UserSerializer, self).create(validated_data)
@@ -123,7 +123,7 @@ class UserSerializer(serializers.ModelSerializer):
 
 class ParticipantProfileSerializer(serializers.ModelSerializer):
     seminars = serializers.SerializerMethodField(read_only=True)
-    accepted = serializers.NullBooleanField(required=True)
+    accepted = serializers.NullBooleanField(default=True)
 
     class Meta:
         model = ParticipantProfile
