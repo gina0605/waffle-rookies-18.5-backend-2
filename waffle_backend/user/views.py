@@ -7,7 +7,7 @@ from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 
-from user.serializers import UserSerializer
+from user.serializers import UserSerializer, ParticipantProfileSerializer
 
 
 class UserViewSet(viewsets.GenericViewSet):
@@ -26,7 +26,10 @@ class UserViewSet(viewsets.GenericViewSet):
         try:
             user = serializer.save()
         except IntegrityError:
-            return Response({"error": "A user with that username already exists."}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {"error": "A user with that username already exists."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
         login(request, user)
 
@@ -64,8 +67,24 @@ class UserViewSet(viewsets.GenericViewSet):
             return Response({"error": "Can't update other Users information"}, status=status.HTTP_403_FORBIDDEN)
 
         user = request.user
-
-        serializer = self.get_serializer(user, data=request.data, partial=True)
+        data = request.data.copy()
+        data.pop('role', '')
+        serializer = self.get_serializer(user, data=data, partial=True)
         serializer.is_valid(raise_exception=True)
         serializer.update(user, serializer.validated_data)
         return Response(serializer.data)
+
+    @action(detail=False, methods=['POST'])
+    def participant(self, request):
+        user = request.user
+        if hasattr(user, 'participant'):
+            return Response({"error": "Already a participant"}, status=status.HTTP_400_BAD_REQUEST)
+        data = request.data.copy()
+        data.update(user=user.pk)
+        if data.get('accepted', '') == '':
+            data.pop('accepted', '')
+        serializer = ParticipantProfileSerializer(data=data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        user.refresh_from_db()
+        return Response(self.get_serializer(user).data, status=status.HTTP_201_CREATED)
