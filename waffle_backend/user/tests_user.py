@@ -12,15 +12,15 @@ class PostUserTestCase(TestCase):
     client = Client()
 
     def setUp(self):
-        self.user1 = User.objects.create_user(
+        user1 = User.objects.create_user(
             username="user1",
             password="password",
             email="user1@mail.com",
             first_name="Kildong",
             last_name="Hong",
         )
-        self.participant1 = ParticipantProfile.objects.create(
-            user=self.user1,
+        ParticipantProfile.objects.create(
+            user=user1,
             university="university1",
             accepted=True,
         )
@@ -195,7 +195,7 @@ class PostUserTestCase(TestCase):
                 "last_name": "Byeon",
                 "email": "bdv111@snu.ac.kr",
                 "role": "participant",
-                "university": "서울대학교"
+                "university": "university2"
             }),
             content_type='application/json'
         )
@@ -214,7 +214,7 @@ class PostUserTestCase(TestCase):
         participant = data["participant"]
         self.assertIsNotNone(participant)
         self.assertIn("id", participant)
-        self.assertEqual(participant["university"], "서울대학교")
+        self.assertEqual(participant["university"], "university2")
         self.assertTrue(participant["accepted"])
         self.assertEqual(len(participant["seminars"]), 0)
 
@@ -227,7 +227,7 @@ class PostUserTestCase(TestCase):
                 "password": "password",
                 "email": "bdv111@snu.ac.kr",
                 "role": "instructor",
-                "university": "서울대학교",
+                "university": "university2",
                 "company": "company"
             }),
             content_type='application/json'
@@ -266,15 +266,14 @@ class PutUserLoginTestCase(TestCase):
     client = Client()
 
     def setUp(self):
-        self.client.post(
-            '/api/v1/user/',
-            json.dumps({
-                "username": "part",
-                "password": "password",
-                "email": "bdv111@snu.ac.kr",
-                "role": "participant",
-            }),
-            content_type='application/json'
+        user1 = User.objects.create_user(
+            username="user1",
+            password="password",
+            email="user1@mail.com",
+        )
+        ParticipantProfile.objects.create(
+            user=user1,
+            accepted=True,
         )
 
     def test_put_user_login_incomplete_request(self):
@@ -290,20 +289,17 @@ class PutUserLoginTestCase(TestCase):
         response = self.client.post(        # No password
             '/api/v1/user/login/',
             json.dumps({
-                "username": "part",
+                "username": "user1",
             }),
             content_type='application/json'
         )
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
-        user_count = User.objects.count()
-        self.assertEqual(user_count, 1)
-
     def test_put_user_login_wrong_request(self):
         response = self.client.post(        # Wrong username
             '/api/v1/user/login/',
             json.dumps({
-                "username": "part_wrong",
+                "username": "username_wrong",
                 "password": "password"
             }),
             content_type='application/json'
@@ -313,21 +309,18 @@ class PutUserLoginTestCase(TestCase):
         response = self.client.post(        # Wrong password
             '/api/v1/user/login/',
             json.dumps({
-                "username": "part",
+                "username": "user1",
                 "password": "password_wrong"
             }),
             content_type='application/json'
         )
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
-        user_count = User.objects.count()
-        self.assertEqual(user_count, 1)
-
     def test_put_user_login(self):
         response = self.client.put(        # Correct
             '/api/v1/user/login/',
             json.dumps({
-                "username": "part",
+                "username": "user1",
                 "password": "password",
             }),
             content_type='application/json'
@@ -336,8 +329,8 @@ class PutUserLoginTestCase(TestCase):
 
         data = response.json()
         self.assertIn("id", data)
-        self.assertEqual(data["username"], "part")
-        self.assertEqual(data["email"], "bdv111@snu.ac.kr")
+        self.assertEqual(data["username"], "user1")
+        self.assertEqual(data["email"], "user1@mail.com")
         self.assertIn("last_login", data)
         self.assertIn("date_joined", data)
         self.assertIn("token", data)
@@ -349,9 +342,6 @@ class PutUserLoginTestCase(TestCase):
         self.assertEqual(len(participant["seminars"]), 0)
 
         self.assertIsNone(data["instructor"])
-
-        user_count = User.objects.count()
-        self.assertEqual(user_count, 1)
 
 
 class PutUserMeTestCase(TestCase):
