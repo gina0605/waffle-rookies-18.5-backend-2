@@ -795,6 +795,19 @@ class PostUserParticipant(TestCase):
         )
         self.inst_instructor_profile_id = inst_instructor_profile.id
 
+        inst2 = User.objects.create_user(
+            username="inst2",
+            password="password",
+            email="inst2@mail.com",
+        )
+        self.inst2_token = 'Token ' + Token.objects.create(user=inst2).key
+        self.inst2_id = inst2.id
+
+        inst2_instructor_profile = InstructorProfile.objects.create(
+            user=inst2,
+        )
+        self.inst2_instructor_profile_id = inst2_instructor_profile.id
+
         partinst = User.objects.create_user(
             username="partinst",
             password="password",
@@ -877,6 +890,42 @@ class PostUserParticipant(TestCase):
         self.assertIsNone(instructor["year"])
         self.assertIsNone(instructor["charge"])
 
-        self.assertEqual(ParticipantProfile.objects.count(), 2)
+        response = self.client.post(         # Correct
+            '/api/v1/user/participant/',
+            json.dumps({
+                "university": "university2",
+                "accepted": "F",
+            }),
+            content_type='application/json',
+            HTTP_AUTHORIZATION=self.inst2_token
+        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        data = response.json()
+        self.assertEqual(data["id"], self.inst2_id)
+        self.assertEqual(data["username"], "inst2")
+        self.assertEqual(data["email"], "inst2@mail.com")
+        self.assertEqual(data["first_name"], "")
+        self.assertEqual(data["last_name"], "")
+        self.assertIn("last_login", data)
+        self.assertIn("date_joined", data)
+        self.assertNotIn("token", data)
+
+        participant = data["participant"]
+        self.assertIsNotNone(participant)
+        self.assertIsNotNone(participant)
+        self.assertIn("id", participant)
+        self.assertEqual(participant["university"], "university2")
+        self.assertFalse(participant["accepted"])
+        self.assertEqual(len(participant["seminars"]), 0)
+
+        instructor = data["instructor"]
+        self.assertIsNotNone(instructor)
+        self.assertEqual(instructor["id"], self.inst2_instructor_profile_id)
+        self.assertEqual(instructor["company"], "")
+        self.assertIsNone(instructor["year"])
+        self.assertIsNone(instructor["charge"])
+
+        self.assertEqual(ParticipantProfile.objects.count(), 3)
 
 
