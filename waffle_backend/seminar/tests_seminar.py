@@ -570,4 +570,171 @@ class PutSeminarSeminaridTestCase(TestCase):
         self.assertFalse(seminar.online)
 
 
+class GetSeminarSeminaridTestCase(TestCase):
+    client = Client()
+
+    def setUp(self):
+        inst = User.objects.create(
+            username="inst",
+            password="password",
+            email="inst@mail.com",
+        )
+        self.inst_id = inst.id
+        InstructorProfile.objects.create(user=inst)
+
+        inst2 = User.objects.create(
+            username="inst2",
+            password="password",
+            email="inst2@mail.com",
+        )
+        self.inst2_id = inst2.id
+        InstructorProfile.objects.create(user=inst2)
+
+        part = User.objects.create(
+            username="part",
+            password="password",
+            email="part@mail.com",
+        )
+        self.part_id = part.id
+        ParticipantProfile.objects.create(user=part)
+
+        partinst = User.objects.create(
+            username="partinst",
+            password="password",
+            email="partinst@mail.com",
+        )
+        self.partinst_id = partinst.id
+        ParticipantProfile.objects.create(user=partinst)
+        InstructorProfile.objects.create(user=partinst)
+
+        seminar = Seminar.objects.create(
+            name="seminar",
+            capacity=10,
+            count=5,
+            time=timezone.localtime(),
+        )
+        self.seminar_id = seminar.id
+        UserSeminar.objects.create(
+            user=inst,
+            seminar=seminar,
+            role="instructor"
+        )
+        UserSeminar.objects.create(
+            user=inst2,
+            seminar=seminar,
+            role="instructor"
+        )
+        UserSeminar.objects.create(
+            user=part,
+            seminar=seminar,
+            role="participant",
+            dropped_at=timezone.localtime(),
+        )
+        UserSeminar.objects.create(
+            user=partinst,
+            seminar=seminar,
+            role="participant"
+        )
+
+        seminar2 = Seminar.objects.create(
+            name="seminar2",
+            capacity=11,
+            count=6,
+            time=timezone.localtime(),
+            online=False,
+        )
+        self.seminar2_id = seminar2.id
+        UserSeminar.objects.create(
+            user=partinst,
+            seminar=seminar2,
+            role="instructor"
+        )
+
+    def test_get_seminar_seminarid_wrong_id(self):
+        response = self.client.get(         # wrong id
+            '/api/v1/seminar/10/',
+            content_type='application/json',
+        )
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_get_seminar(self):
+        response = self.client.get(         # Correct
+            '/api/v1/seminar/{}/'.format(self.seminar_id),
+            content_type='application/json',
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        data = response.json()
+        self.assertEqual(data["id"], self.seminar_id)
+        self.assertEqual(data["name"], "seminar")
+        self.assertEqual(data["capacity"], 10)
+        self.assertEqual(data["count"], 5)
+        self.assertIn("time", data)
+        self.assertTrue(data["online"])
+        self.assertIn("instructors", data)
+        self.assertEqual(len(data["instructors"]), 2)
+
+        instructor = data["instructors"][0]
+        self.assertEqual(instructor["id"], self.inst_id)
+        self.assertEqual(instructor["username"], "inst")
+        self.assertEqual(instructor["email"], "inst@mail.com")
+        self.assertEqual(instructor["first_name"], "")
+        self.assertEqual(instructor["last_name"], "")
+        self.assertIn("joined_at", instructor)
+
+        instructor2 = data["instructors"][1]
+        self.assertEqual(instructor2["id"], self.inst2_id)
+        self.assertEqual(instructor2["username"], "inst2")
+        self.assertEqual(instructor2["email"], "inst2@mail.com")
+        self.assertEqual(instructor2["first_name"], "")
+        self.assertEqual(instructor2["last_name"], "")
+        self.assertIn("joined_at", instructor2)
+        self.assertIn("participants", data)
+        self.assertEqual(len(data["participants"]), 2)
+
+        participant = data["participants"][0]
+        self.assertEqual(participant["id"], self.part_id)
+        self.assertEqual(participant["username"], "part")
+        self.assertEqual(participant["email"], "part@mail.com")
+        self.assertEqual(participant["first_name"], "")
+        self.assertEqual(participant["last_name"], "")
+        self.assertIn("joined_at", participant)
+        self.assertFalse(participant["is_active"])
+        self.assertIsNotNone(participant["dropped_at"])
+
+        participant2 = data["participants"][1]
+        self.assertEqual(participant2["id"], self.partinst_id)
+        self.assertEqual(participant2["username"], "partinst")
+        self.assertEqual(participant2["email"], "partinst@mail.com")
+        self.assertEqual(participant2["first_name"], "")
+        self.assertEqual(participant2["last_name"], "")
+        self.assertIn("joined_at", participant2)
+        self.assertTrue(participant2["is_active"])
+        self.assertIsNone(participant2["dropped_at"])
+
+        response = self.client.get(         # Correct
+            '/api/v1/seminar/{}/'.format(self.seminar2_id),
+            content_type='application/json',
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        data = response.json()
+        self.assertEqual(data["id"], self.seminar2_id)
+        self.assertEqual(data["name"], "seminar2")
+        self.assertEqual(data["capacity"], 11)
+        self.assertEqual(data["count"], 6)
+        self.assertIn("time", data)
+        self.assertFalse(data["online"])
+        self.assertIn("instructors", data)
+        self.assertEqual(len(data["instructors"]), 1)
+
+        instructor = data["instructors"][0]
+        self.assertEqual(instructor["id"], self.partinst_id)
+        self.assertEqual(instructor["username"], "partinst")
+        self.assertEqual(instructor["email"], "partinst@mail.com")
+        self.assertEqual(instructor["first_name"], "")
+        self.assertEqual(instructor["last_name"], "")
+        self.assertIn("joined_at", instructor)
+
+        self.assertEqual(len(data["participants"]), 0)
 
