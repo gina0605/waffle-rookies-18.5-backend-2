@@ -129,25 +129,12 @@ class PostUserTestCase(TestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
-        response = self.client.post(        # Only first_name, last_name blank
+        response = self.client.post(        # Only last_name, first_name blank
             '/api/v1/user/',
             json.dumps({
                 "username": "participant",
                 "password": "password",
-                "first_name": "Davin",
-                "last_name": "",
-                "role": "participant",
-                "university": "서울대학교"
-            }),
-            content_type='application/json'
-        )
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-
-        response = self.client.post(        # Only last_name, no first_name
-            '/api/v1/user/',
-            json.dumps({
-                "username": "participant",
-                "password": "password",
+                "first_name": "",
                 "last_name": "Byeon",
                 "role": "participant",
                 "university": "서울대학교"
@@ -156,12 +143,12 @@ class PostUserTestCase(TestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
-        response = self.client.post(        # Only last_name, first_name blank
+        response = self.client.post(        # Number in first_name
             '/api/v1/user/',
             json.dumps({
                 "username": "participant",
                 "password": "password",
-                "first_name": "",
+                "first_name": "Davin0",
                 "last_name": "Byeon",
                 "role": "participant",
                 "university": "서울대학교"
@@ -303,7 +290,7 @@ class PutUserMeTestCase(TestCase):
         self.instructor_token = 'Token ' + Token.objects.get(user__username='inst').key
 
     def test_put_user_incomplete_request(self):
-        response = self.client.put(
+        response = self.client.put(         # Unauthorized
             '/api/v1/user/me/',
             json.dumps({
                 "first_name": "Dabin"
@@ -312,7 +299,7 @@ class PutUserMeTestCase(TestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
-        response = self.client.put(
+        response = self.client.put(         # Only first_name, no last_name
             '/api/v1/user/me/',
             json.dumps({
                 "first_name": "Dabin"
@@ -325,7 +312,42 @@ class PutUserMeTestCase(TestCase):
         participant_user = User.objects.get(username='part')
         self.assertEqual(participant_user.first_name, 'Davin')
 
-        response = self.client.put(
+        response = self.client.put(         # Only last_name, first_name blank
+            '/api/v1/user/me/',
+            json.dumps({
+                "first_name": "",
+                "last_name": "byeon",
+                "email": "bdv222@snu.ac.kr"
+            }),
+            content_type='application/json',
+            HTTP_AUTHORIZATION=self.participant_token
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+        participant_user = User.objects.get(username='part')
+        self.assertEqual(participant_user.first_name, 'Davin')
+        self.assertEqual(participant_user.last_name, 'Byeon')
+        self.assertEqual(participant_user.email, 'bdv111@snu.ac.kr')
+
+        response = self.client.put(         # Number in last_name
+            '/api/v1/user/me/',
+            json.dumps({
+                "first_name": "davin",
+                "last_name": "Byeon0",
+                "university": "university",
+            }),
+            content_type='application/json',
+            HTTP_AUTHORIZATION=self.participant_token
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+        participant_user = User.objects.get(username='part')
+        self.assertEqual(participant_user.first_name, 'Davin')
+        self.assertEqual(participant_user.last_name, 'Byeon')
+        participant = participant_user.participant
+        self.assertEqual(participant.university, '서울대학교')
+
+        response = self.client.put(         # Year < 0
             '/api/v1/user/me/',
             json.dumps({
                 "username": "inst123",
@@ -340,6 +362,26 @@ class PutUserMeTestCase(TestCase):
 
         instructor_user = User.objects.get(username='inst')
         self.assertEqual(instructor_user.email, 'bdv111@snu.ac.kr')
+        instructor = instructor_user.instructor
+        self.assertEqual(instructor.year, 1)
+
+        response = self.client.put(         # Year < 0
+            '/api/v1/user/me/',
+            json.dumps({
+                "username": "inst123",
+                "email": "bdv111@naver.com",
+                "company": "매스프레소",
+                "year": "a"
+            }),
+            content_type='application/json',
+            HTTP_AUTHORIZATION=self.instructor_token
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+        instructor_user = User.objects.get(username='inst')
+        self.assertEqual(instructor_user.email, 'bdv111@snu.ac.kr')
+        instructor = instructor_user.instructor
+        self.assertEqual(instructor.year, 1)
 
     def test_put_user_me_participant(self):
         response = self.client.put(
