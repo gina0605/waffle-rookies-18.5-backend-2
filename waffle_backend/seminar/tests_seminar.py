@@ -291,6 +291,17 @@ class PostSeminarTestCase(TestCase):
         self.assertIn("joined_at", instructor)
         self.assertEqual(len(data["participants"]), 0)
 
+        seminar = Seminar.objects.get(id=data["id"])
+        self.assertEqual(seminar.name, "seminar2")
+        self.assertEqual(seminar.capacity, 9)
+        self.assertEqual(seminar.count, 4)
+        self.assertTrue(hasattr(seminar, "time"))
+        self.assertTrue(seminar.online)
+        userseminar = seminar.user_seminars.get()
+        self.assertEqual(userseminar.user.username, "partinst")
+        self.assertEqual(userseminar.role, "instructor")
+        self.assertIsNone(userseminar.dropped_at)
+
         response = self.client.post(         # Correct
             '/api/v1/seminar/',
             json.dumps({
@@ -321,6 +332,17 @@ class PostSeminarTestCase(TestCase):
         self.assertEqual(instructor["last_name"], "")
         self.assertIn("joined_at", instructor)
         self.assertEqual(len(data["participants"]), 0)
+
+        seminar = Seminar.objects.get(id=data["id"])
+        self.assertEqual(seminar.name, "seminar2")
+        self.assertEqual(seminar.capacity, 9)
+        self.assertEqual(seminar.count, 4)
+        self.assertTrue(hasattr(seminar, "time"))
+        self.assertFalse(seminar.online)
+        userseminar = seminar.user_seminars.get()
+        self.assertEqual(userseminar.user.username, "inst2")
+        self.assertEqual(userseminar.role, "instructor")
+        self.assertIsNone(userseminar.dropped_at)
 
         self.assertEqual(Seminar.objects.count(), 3)
         self.assertEqual(UserSeminar.objects.count(), 4)
