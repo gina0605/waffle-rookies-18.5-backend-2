@@ -116,6 +116,9 @@ class PostUserTestCase(TestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
+        user_count = User.objects.count()
+        self.assertEqual(user_count, 1)
+
     def test_post_user_wrong_request(self):
         response = self.client.post(        # Only first_name, no last_name
             '/api/v1/user/',
@@ -290,6 +293,10 @@ class PutUserLoginTestCase(TestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
+        user_count = User.objects.count()
+        self.assertEqual(user_count, 1)
+
+    def test_put_user_login_wrong_request(self):
         response = self.client.post(        # Wrong username
             '/api/v1/user/login/',
             json.dumps({
@@ -300,7 +307,6 @@ class PutUserLoginTestCase(TestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
-    def test_put_user_login_wrong_request(self):
         response = self.client.post(        # Wrong password
             '/api/v1/user/login/',
             json.dumps({
@@ -311,7 +317,10 @@ class PutUserLoginTestCase(TestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
-    def test_put_user_login_request(self):
+        user_count = User.objects.count()
+        self.assertEqual(user_count, 1)
+
+    def test_put_user_login(self):
         response = self.client.put(        # Correct
             '/api/v1/user/login/',
             json.dumps({
@@ -337,6 +346,9 @@ class PutUserLoginTestCase(TestCase):
         self.assertEqual(len(participant["seminars"]), 0)
 
         self.assertIsNone(data["instructor"])
+
+        user_count = User.objects.count()
+        self.assertEqual(user_count, 1)
 
 
 class PutUserMeTestCase(TestCase):
@@ -373,20 +385,24 @@ class PutUserMeTestCase(TestCase):
         )
         self.instructor_token = 'Token ' + Token.objects.get(user__username='inst').key
 
-    def test_put_user_incomplete_request(self):
+    def test_put_user_unauthorized_request(self):
         response = self.client.put(         # Unauthorized
             '/api/v1/user/me/',
             json.dumps({
-                "first_name": "Dabin"
+                "email": "bdv222@snu.ac.kr"
             }),
             content_type='application/json'
         )
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+        participant_user = User.objects.get(username='part')
+        self.assertEqual(participant_user.email, "bdv111@snu.ac.kr")
 
+    def test_put_user_wrong_request(self):
         response = self.client.put(         # Only first_name, no last_name
             '/api/v1/user/me/',
             json.dumps({
-                "first_name": "Dabin"
+                "first_name": "Dabin",
+                "email": "bdv222@snu.ac.kr"
             }),
             content_type='application/json',
             HTTP_AUTHORIZATION=self.participant_token
@@ -395,6 +411,7 @@ class PutUserMeTestCase(TestCase):
 
         participant_user = User.objects.get(username='part')
         self.assertEqual(participant_user.first_name, 'Davin')
+        self.assertEqual(participant_user.email, 'bdv111@snu.ac.kr')
 
         response = self.client.put(         # Only last_name, first_name blank
             '/api/v1/user/me/',
@@ -447,6 +464,7 @@ class PutUserMeTestCase(TestCase):
         instructor_user = User.objects.get(username='inst')
         self.assertEqual(instructor_user.email, 'bdv111@snu.ac.kr')
         instructor = instructor_user.instructor
+        self.assertEqual(instructor.company, "")
         self.assertEqual(instructor.year, 1)
 
         response = self.client.put(         # Year not number
@@ -454,7 +472,6 @@ class PutUserMeTestCase(TestCase):
             json.dumps({
                 "username": "inst123",
                 "email": "bdv111@naver.com",
-                "company": "매스프레소",
                 "year": "a"
             }),
             content_type='application/json',
@@ -499,6 +516,7 @@ class PutUserMeTestCase(TestCase):
         self.assertEqual(len(participant["seminars"]), 0)
 
         self.assertIsNone(data["instructor"])
+
         participant_user = User.objects.get(username='part123')
         self.assertEqual(participant_user.email, 'bdv111@naver.com')
 
