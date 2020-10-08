@@ -20,7 +20,7 @@ class UserSeminar(models.Model):
     seminar = models.ForeignKey(Seminar, related_name='user_seminars', on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    role = models.PositiveSmallIntegerField(choices=AVAILABLE_ROLES)
+    role = models.CharField(max_length=20)
     dropped_at = models.DateTimeField(null=True)
 
     class Meta:

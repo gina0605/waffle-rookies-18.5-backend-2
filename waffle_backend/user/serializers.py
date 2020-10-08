@@ -139,7 +139,7 @@ class ParticipantProfileSerializer(serializers.ModelSerializer):
     def get_seminars(self, participant):
         user = participant.user
         queryset = UserSeminar.objects.filter(user=user, role='participant')
-        return ParticipantSeminarSerializer(queryset, many=True).data
+        return ParticipantSeminarSerializer(queryset, many=True, context=self.context).data
 
 
 class InstructorProfileSerializer(serializers.ModelSerializer):
@@ -160,4 +160,4 @@ class InstructorProfileSerializer(serializers.ModelSerializer):
             queryset = UserSeminar.objects.get(user=user, role='instructor')
         except ObjectDoesNotExist:
             return None
-        return InstructorSeminarSerializer(queryset).data
+        return InstructorSeminarSerializer(queryset, context=self.context).data

@@ -26,11 +26,11 @@ class SeminarSerializer(serializers.ModelSerializer):
 
     def get_instructors(self, seminar):
         queryset = UserSeminar.objects.filter(seminar=seminar, role='instructor')
-        return SeminarInstructorSerializer(queryset, many=True).data
+        return SeminarInstructorSerializer(queryset, many=True, context=self.context).data
 
     def get_participants(self, seminar):
         queryset = UserSeminar.objects.filter(seminar=seminar, role='participant')
-        return SeminarParticipantSerializer(queryset, many=True).data
+        return SeminarParticipantSerializer(queryset, many=True, context=self.context).data
 
 
 class SimpleSeminarSerializer(serializers.ModelSerializer):
@@ -48,7 +48,7 @@ class SimpleSeminarSerializer(serializers.ModelSerializer):
         )
 
     def get_instructors(self, seminar):
-        return SeminarInstructorSerializer(seminar.userseminar_instructors, many=True).data
+        return SeminarInstructorSerializer(seminar.userseminar_instructors, many=True, context=self.context).data
 
     def get_participant_count(self, seminar):
         return seminar.participant_count
