@@ -755,7 +755,7 @@ class GetUserPkTestCase(TestCase):
         self.assertIsNone(data["instructor"])
 
 
-class PostUserParticipant(TestCase):
+class PostUserParticipantTestCase(TestCase):
     client = Client()
 
     def setUp(self):
@@ -861,10 +861,17 @@ class PostUserParticipant(TestCase):
         self.assertIsNone(instructor["year"])
         self.assertIsNone(instructor["charge"])
 
+        user = User.objects.get(username="inst")
+        self.assertTrue(hasattr(user, 'participant'))
+        participant = user.participant
+        self.assertEqual(participant.university, "")
+        self.assertTrue(participant.accepted)
+
         response = self.client.post(         # Correct
             '/api/v1/user/participant/',
             json.dumps({
                 "university": "university2",
+                "company": "company1",
                 "accepted": "F",
             }),
             content_type='application/json',
@@ -894,5 +901,16 @@ class PostUserParticipant(TestCase):
         self.assertEqual(instructor["company"], "")
         self.assertIsNone(instructor["year"])
         self.assertIsNone(instructor["charge"])
+
+        user = User.objects.get(username="inst2")
+        self.assertTrue(hasattr(user, "participant"))
+        participant = user.participant
+        self.assertEqual(participant.university, "university2")
+        self.assertFalse(participant.accepted)
+        self.assertTrue(hasattr(user, "instructor"))
+        instructor = user.instructor
+        self.assertEqual(instructor.company, "")
+        self.assertIsNone(instructor.year)
+
 
         self.assertEqual(ParticipantProfile.objects.count(), 3)
