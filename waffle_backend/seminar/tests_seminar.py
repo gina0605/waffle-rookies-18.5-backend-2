@@ -237,6 +237,23 @@ class PostSeminar(TestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
+        response = self.client.post(         # online wrong
+            '/api/v1/seminar/',
+            json.dumps({
+                "name": "seminar2",
+                "capacity": 9,
+                "count": 4,
+                "time": "13:20:10",
+                "online": "dd"
+            }),
+            HTTP_AUTHORIZATION=self.partinst_token,
+            content_type='application/json',
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+        self.assertEqual(Seminar.objects.count(), 1)
+        self.assertEqual(UserSeminar.objects.count(), 2)
+
 
 
 
