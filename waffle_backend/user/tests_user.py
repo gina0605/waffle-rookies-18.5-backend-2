@@ -194,15 +194,21 @@ class PostUserTestCase(TestCase):
         self.assertIn("last_login", data)
         self.assertIn("date_joined", data)
         self.assertIn("token", data)
-
         participant = data["participant"]
         self.assertIsNotNone(participant)
         self.assertIn("id", participant)
         self.assertEqual(participant["university"], "university2")
         self.assertTrue(participant["accepted"])
         self.assertEqual(len(participant["seminars"]), 0)
-
         self.assertIsNone(data["instructor"])
+
+        participant = User.objects.get(username="participant")
+        self.assertEqual(participant.first_name, "Davin")
+        self.assertEqual(participant.last_name, "Byeon")
+        self.assertEqual(participant.email, "bdv111@snu.ac.kr")
+        participant_profile = participant.participant
+        self.assertEqual(participant_profile.university, "university2")
+        self.assertTrue(participant_profile.accepted)
 
         response = self.client.post(        # Correct, first_name and last_name both not exist
             '/api/v1/user/',
@@ -227,33 +233,13 @@ class PostUserTestCase(TestCase):
         self.assertIn("last_login", data)
         self.assertIn("date_joined", data)
         self.assertIn("token", data)
-
         self.assertIsNone(data["participant"])
-
         instructor = data["instructor"]
         self.assertIsNotNone(instructor)
         self.assertIn("id", instructor)
         self.assertEqual(instructor["company"], "company")
         self.assertIsNone(instructor["year"])
         self.assertIsNone(instructor["charge"])
-
-
-        user_count = User.objects.count()
-        self.assertEqual(user_count, 3)
-
-
-        participant_count = ParticipantProfile.objects.count()
-        self.assertEqual(participant_count, 2)
-        instructor_count = InstructorProfile.objects.count()
-        self.assertEqual(instructor_count, 1)
-
-        participant = User.objects.get(username="participant")
-        self.assertEqual(participant.first_name, "Davin")
-        self.assertEqual(participant.last_name, "Byeon")
-        self.assertEqual(participant.email, "bdv111@snu.ac.kr")
-        participant_profile = participant.participant
-        self.assertEqual(participant_profile.university, "university2")
-        self.assertTrue(participant_profile.accepted)
 
         instructor = User.objects.get(username="instructor")
         self.assertEqual(instructor.first_name, "")
@@ -262,6 +248,14 @@ class PostUserTestCase(TestCase):
         instructor_profile = instructor.instructor
         self.assertEqual(instructor_profile.company, "company")
         self.assertIsNone(instructor_profile.year)
+
+
+        user_count = User.objects.count()
+        self.assertEqual(user_count, 3)
+        participant_count = ParticipantProfile.objects.count()
+        self.assertEqual(participant_count, 2)
+        instructor_count = InstructorProfile.objects.count()
+        self.assertEqual(instructor_count, 1)
 
 
 class PutUserLoginTestCase(TestCase):
@@ -335,13 +329,11 @@ class PutUserLoginTestCase(TestCase):
         self.assertIn("last_login", data)
         self.assertIn("date_joined", data)
         self.assertIn("token", data)
-
         participant = data["participant"]
         self.assertIsNotNone(participant)
         self.assertIn("id", participant)
         self.assertEqual(participant["accepted"], True)
         self.assertEqual(len(participant["seminars"]), 0)
-
         self.assertIsNone(data["instructor"])
 
 
@@ -382,6 +374,7 @@ class PutUserMeTestCase(TestCase):
             content_type='application/json'
         )
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
         participant_user = User.objects.get(username='part')
         self.assertEqual(participant_user.email, "part@mail.com")
 
@@ -494,14 +487,12 @@ class PutUserMeTestCase(TestCase):
         self.assertIn("last_login", data)
         self.assertIn("date_joined", data)
         self.assertNotIn("token", data)
-
         participant = data["participant"]
         self.assertIsNotNone(participant)
         self.assertIn("id", participant)
         self.assertEqual(participant["university"], "university2")
         self.assertTrue(participant["accepted"])
         self.assertEqual(len(participant["seminars"]), 0)
-
         self.assertIsNone(data["instructor"])
 
         participant_user = User.objects.get(username='Part')
@@ -536,9 +527,7 @@ class PutUserMeTestCase(TestCase):
         self.assertIn("last_login", data)
         self.assertIn("date_joined", data)
         self.assertNotIn("token", data)
-
         self.assertIsNone(data["participant"])
-
         instructor = data["instructor"]
         self.assertIsNotNone(instructor)
         self.assertIn("id", instructor)
@@ -568,7 +557,6 @@ class GetUserPkTestCase(TestCase):
         )
         self.part_token = 'Token ' + Token.objects.create(user=part).key
         self.part_id = part.id
-
         participant_profile = ParticipantProfile.objects.create(
             user=part,
             university="university1",
@@ -582,7 +570,6 @@ class GetUserPkTestCase(TestCase):
         )
         self.part2_token = 'Token ' + Token.objects.create(user=part2).key
         self.part2_id = part2.id
-
         participant_profile2 = ParticipantProfile.objects.create(
             user=part2,
             accepted=False,
@@ -596,7 +583,6 @@ class GetUserPkTestCase(TestCase):
         )
         self.inst_token = 'Token ' + Token.objects.create(user=inst).key
         self.inst_id = inst.id
-
         instructor_profile = InstructorProfile.objects.create(
             user=inst,
             company="company1",
@@ -612,7 +598,6 @@ class GetUserPkTestCase(TestCase):
         )
         self.inst2_token = 'Token ' + Token.objects.create(user=inst2).key
         self.inst2_id = inst2.id
-
         instructor_profile2 = InstructorProfile.objects.create(
             user=inst2,
             year=0
@@ -626,14 +611,12 @@ class GetUserPkTestCase(TestCase):
             time=datetime.time(hour=14, minute=30),
         )
         self.seminar_id = seminar.id
-
         UserSeminar.objects.create(
             user=part,
             seminar=seminar,
             role='participant',
             dropped_at=timezone.localtime()
         )
-
         UserSeminar.objects.create(
             user=inst,
             seminar=seminar,
@@ -680,7 +663,6 @@ class GetUserPkTestCase(TestCase):
         self.assertIn("last_login", data)
         self.assertIn("date_joined", data)
         self.assertNotIn("token", data)
-
         participant = data["participant"]
         self.assertIsNotNone(participant)
         self.assertEqual(participant["id"], self.participant_profile_id)
@@ -693,7 +675,6 @@ class GetUserPkTestCase(TestCase):
         self.assertIn("joined_at", seminar)
         self.assertFalse(seminar["is_active"])
         self.assertIsNotNone(seminar["dropped_at"])
-
         self.assertIsNone(data["instructor"])
 
         response = self.client.get(         # Correct, instructor without seminar
@@ -712,9 +693,7 @@ class GetUserPkTestCase(TestCase):
         self.assertIn("last_login", data)
         self.assertIn("date_joined", data)
         self.assertNotIn("token", data)
-
         self.assertIsNone(data["participant"])
-
         instructor = data["instructor"]
         self.assertIsNotNone(instructor)
         self.assertEqual(instructor["id"], self.instructor_profile2_id)
@@ -739,9 +718,7 @@ class GetUserPkTestCase(TestCase):
         self.assertIn("last_login", data)
         self.assertIn("date_joined", data)
         self.assertNotIn("token", data)
-
         self.assertIsNone(data["participant"])
-
         instructor = data["instructor"]
         self.assertIsNotNone(instructor)
         self.assertEqual(instructor["id"], self.instructor_profile_id)
@@ -769,14 +746,12 @@ class GetUserPkTestCase(TestCase):
         self.assertIn("last_login", data)
         self.assertIn("date_joined", data)
         self.assertNotIn("token", data)
-
         participant = data["participant"]
         self.assertIsNotNone(participant)
         self.assertEqual(participant["id"], self.participant_profile2_id)
         self.assertEqual(participant["university"], "")
         self.assertFalse(participant["accepted"])
         self.assertEqual(len(participant["seminars"]), 0)
-
         self.assertIsNone(data["instructor"])
 
 
@@ -791,7 +766,6 @@ class PostUserParticipant(TestCase):
         )
         self.inst_token = 'Token ' + Token.objects.create(user=inst).key
         self.inst_id = inst.id
-
         inst_instructor_profile = InstructorProfile.objects.create(
             user=inst,
         )
@@ -804,7 +778,6 @@ class PostUserParticipant(TestCase):
         )
         self.inst2_token = 'Token ' + Token.objects.create(user=inst2).key
         self.inst2_id = inst2.id
-
         inst2_instructor_profile = InstructorProfile.objects.create(
             user=inst2,
         )
@@ -817,12 +790,10 @@ class PostUserParticipant(TestCase):
         )
         self.partinst_token = 'Token ' + Token.objects.create(user=partinst).key
         self.partinst_id = partinst.id
-
         partinst_participant_profile = ParticipantProfile.objects.create(
             user=partinst,
         )
         self.partinst_participant_profile_id = partinst_participant_profile.id
-
         partinst_instructor_profile = InstructorProfile.objects.create(
             user=partinst,
         )
@@ -877,14 +848,12 @@ class PostUserParticipant(TestCase):
         self.assertIn("last_login", data)
         self.assertIn("date_joined", data)
         self.assertNotIn("token", data)
-
         participant = data["participant"]
         self.assertIsNotNone(participant)
         self.assertIn("id", participant)
         self.assertEqual(participant["university"], "")
         self.assertTrue(participant["accepted"])
         self.assertEqual(len(participant["seminars"]), 0)
-
         instructor = data["instructor"]
         self.assertIsNotNone(instructor)
         self.assertEqual(instructor["id"], self.inst_instructor_profile_id)
@@ -912,7 +881,6 @@ class PostUserParticipant(TestCase):
         self.assertIn("last_login", data)
         self.assertIn("date_joined", data)
         self.assertNotIn("token", data)
-
         participant = data["participant"]
         self.assertIsNotNone(participant)
         self.assertIsNotNone(participant)
@@ -920,7 +888,6 @@ class PostUserParticipant(TestCase):
         self.assertEqual(participant["university"], "university2")
         self.assertFalse(participant["accepted"])
         self.assertEqual(len(participant["seminars"]), 0)
-
         instructor = data["instructor"]
         self.assertIsNotNone(instructor)
         self.assertEqual(instructor["id"], self.inst2_instructor_profile_id)

@@ -18,7 +18,6 @@ class PostSeminarTestCase(TestCase):
             email="part@mail.com",
         )
         self.part_token = 'Token ' + Token.objects.create(user=part).key
-
         ParticipantProfile.objects.create(
             user=part,
         )
@@ -30,11 +29,9 @@ class PostSeminarTestCase(TestCase):
         )
         self.partinst_token = 'Token ' + Token.objects.create(user=partinst).key
         self.partinst_id = partinst.id
-
         ParticipantProfile.objects.create(
             user=partinst,
         )
-
         InstructorProfile.objects.create(
             user=partinst,
         )
@@ -45,7 +42,6 @@ class PostSeminarTestCase(TestCase):
             email="inst@mail.com",
         )
         self.inst_token = 'Token ' + Token.objects.create(user=inst).key
-
         InstructorProfile.objects.create(
             user=inst,
         )
@@ -57,7 +53,6 @@ class PostSeminarTestCase(TestCase):
         )
         self.inst2_token = 'Token ' + Token.objects.create(user=inst2).key
         self.inst2_id = inst2.id
-
         InstructorProfile.objects.create(
             user=inst2,
         )
@@ -68,13 +63,11 @@ class PostSeminarTestCase(TestCase):
             count=5,
             time=datetime.time(hour=14, minute=30),
         )
-
         UserSeminar.objects.create(
             user=partinst,
             seminar=seminar,
             role="participant",
         )
-
         UserSeminar.objects.create(
             user=inst,
             seminar=seminar,
@@ -297,7 +290,6 @@ class PostSeminarTestCase(TestCase):
         self.assertEqual(instructor["last_name"], "")
         self.assertIn("joined_at", instructor)
         self.assertEqual(len(data["participants"]), 0)
-
 
         response = self.client.post(         # Correct
             '/api/v1/seminar/',
