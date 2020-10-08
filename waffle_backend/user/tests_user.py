@@ -929,5 +929,3 @@ class PostUserParticipant(TestCase):
         self.assertIsNone(instructor["charge"])
 
         self.assertEqual(ParticipantProfile.objects.count(), 3)
-
-
