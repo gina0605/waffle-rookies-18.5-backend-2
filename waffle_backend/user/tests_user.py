@@ -116,6 +116,7 @@ class PostUserTestCase(TestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
+    def test_post_user_wrong_request(self):
         response = self.client.post(        # Only first_name, no last_name
             '/api/v1/user/',
             json.dumps({
@@ -299,6 +300,7 @@ class PutUserLoginTestCase(TestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
+    def test_put_user_login_wrong_request(self):
         response = self.client.post(        # Wrong password
             '/api/v1/user/login/',
             json.dumps({
@@ -538,5 +540,4 @@ class PutUserMeTestCase(TestCase):
 
         instructor_user = User.objects.get(username='inst123')
         self.assertEqual(instructor_user.email, 'bdv111@naver.com')
-
 
