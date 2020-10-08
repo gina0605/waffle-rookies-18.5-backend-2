@@ -26,7 +26,7 @@ class PostUserTestCase(TestCase):
         )
 
     def test_post_user_duplicated_username(self):
-        response = self.client.post(
+        response = self.client.post(        # Same username
             '/api/v1/user/',
             json.dumps({
                 "username": "davin111",
@@ -116,11 +116,65 @@ class PostUserTestCase(TestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
+        response = self.client.post(        # Only first_name, no last_name
+            '/api/v1/user/',
+            json.dumps({
+                "username": "participant",
+                "password": "password",
+                "first_name": "Davin",
+                "role": "participant",
+                "university": "서울대학교"
+            }),
+            content_type='application/json'
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+        response = self.client.post(        # Only first_name, last_name blank
+            '/api/v1/user/',
+            json.dumps({
+                "username": "participant",
+                "password": "password",
+                "first_name": "Davin",
+                "last_name": "",
+                "role": "participant",
+                "university": "서울대학교"
+            }),
+            content_type='application/json'
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+        response = self.client.post(        # Only last_name, no first_name
+            '/api/v1/user/',
+            json.dumps({
+                "username": "participant",
+                "password": "password",
+                "last_name": "Byeon",
+                "role": "participant",
+                "university": "서울대학교"
+            }),
+            content_type='application/json'
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+        response = self.client.post(        # Only last_name, first_name blank
+            '/api/v1/user/',
+            json.dumps({
+                "username": "participant",
+                "password": "password",
+                "first_name": "",
+                "last_name": "Byeon",
+                "role": "participant",
+                "university": "서울대학교"
+            }),
+            content_type='application/json'
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
         user_count = User.objects.count()
         self.assertEqual(user_count, 1)
 
     def test_post_user(self):
-        response = self.client.post(
+        response = self.client.post(        # Same username
             '/api/v1/user/',
             json.dumps({
                 "username": "davin111",
@@ -138,7 +192,7 @@ class PostUserTestCase(TestCase):
         user_count = User.objects.count()
         self.assertEqual(user_count, 1)
 
-        response = self.client.post(
+        response = self.client.post(        # Correct
             '/api/v1/user/',
             json.dumps({
                 "username": "participant",
