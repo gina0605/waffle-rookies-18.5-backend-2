@@ -365,7 +365,7 @@ class PutUserMeTestCase(TestCase):
         instructor = instructor_user.instructor
         self.assertEqual(instructor.year, 1)
 
-        response = self.client.put(         # Year < 0
+        response = self.client.put(         # Year not number
             '/api/v1/user/me/',
             json.dumps({
                 "username": "inst123",
@@ -384,12 +384,13 @@ class PutUserMeTestCase(TestCase):
         self.assertEqual(instructor.year, 1)
 
     def test_put_user_me_participant(self):
-        response = self.client.put(
+        response = self.client.put(         # Correct
             '/api/v1/user/me/',
             json.dumps({
                 "username": "part123",
                 "email": "bdv111@naver.com",
-                "university": "경북대학교"
+                "university": "경북대학교",
+                "accepted": "F",
             }),
             content_type='application/json',
             HTTP_AUTHORIZATION=self.participant_token
@@ -427,7 +428,7 @@ class PutUserMeTestCase(TestCase):
                 "last_name": "Byeon",
                 "university": "서울대학교",  # this should be ignored
                 "company": "매스프레소",
-                "year": 2
+                "year": 0
             }),
             content_type='application/json',
             HTTP_AUTHORIZATION=self.instructor_token
@@ -450,7 +451,7 @@ class PutUserMeTestCase(TestCase):
         self.assertIsNotNone(instructor)
         self.assertIn("id", instructor)
         self.assertEqual(instructor["company"], "매스프레소")
-        self.assertEqual(instructor["year"], 2)
+        self.assertEqual(instructor["year"], 0)
         self.assertIsNone(instructor["charge"])
 
         instructor_user = User.objects.get(username='inst123')
