@@ -1,5 +1,6 @@
 from django.contrib.auth.models import User
 from django.test import Client, TestCase
+from django.utils import timezone
 from rest_framework import status
 from rest_framework.authtoken.models import Token
 import json
@@ -630,7 +631,7 @@ class GetUserPkTestCase(TestCase):
             user=part,
             seminar=seminar,
             role='participant',
-            dropped_at=None,
+            dropped_at=timezone.localtime()
         )
 
         UserSeminar.objects.create(
@@ -690,8 +691,8 @@ class GetUserPkTestCase(TestCase):
         self.assertEqual(seminar["id"], self.seminar_id)
         self.assertEqual(seminar["name"], "seminar1")
         self.assertIn("joined_at", seminar)
-        self.assertTrue(seminar["is_active"])
-        self.assertIsNone(seminar["dropped_at"])
+        self.assertFalse(seminar["is_active"])
+        self.assertIsNotNone(seminar["dropped_at"])
 
         self.assertIsNone(data["instructor"])
 
@@ -777,6 +778,7 @@ class GetUserPkTestCase(TestCase):
         self.assertEqual(len(participant["seminars"]), 0)
 
         self.assertIsNone(data["instructor"])
+
 
 class PostUserParticipant(TestCase):
     client = Client()
