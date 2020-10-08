@@ -541,3 +541,78 @@ class PutUserMeTestCase(TestCase):
         instructor_user = User.objects.get(username='inst123')
         self.assertEqual(instructor_user.email, 'bdv111@naver.com')
 
+
+class GetUserPkTestCase(TestCase):
+    client = Client()
+
+    def setUp(self):
+        self.client.post(
+            '/api/v1/user/',
+            json.dumps({
+                "username": "part",
+                "password": "password",
+                "first_name": "Davin",
+                "last_name": "Byeon",
+                "email": "bdv111@snu.ac.kr",
+                "role": "participant",
+                "university": "university",
+            }),
+            content_type='application/json'
+        )
+        self.participant_token = 'Token ' + Token.objects.get(user__username='part').key
+
+        self.client.post(
+            '/api/v1/user/',
+            json.dumps({
+                "username": "inst",
+                "password": "password",
+                "email": "bdv111@snu.ac.kr",
+                "role": "instructor",
+                "company": "company",
+                "year": 1
+            }),
+            content_type='application/json'
+        )
+        self.instructor_token = 'Token ' + Token.objects.get(user__username='inst').key
+
+    def test_get_user_pk_unauthorized(self):
+        response = self.client.get(         # Unauthorized
+            '/api/v1/user/1/',
+            content_type='application/json',
+        )
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_get_user_pk_wrong_pk(self):
+        response = self.client.get(         # Wrong pk
+            '/api/v1/user/3/',
+            content_type='application/json',
+            HTTP_AUTHORIZATION=self.participant_token
+        )
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_get_user_pk(self):
+        response = self.client.get(         # Unauthorized
+            '/api/v1/user/1/',
+            content_type='application/json',
+            HTTP_AUTHORIZATION=self.participant_token
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        data = response.json()
+        self.assertIn("id", data)
+        self.assertEqual(data["username"], "part")
+        self.assertEqual(data["email"], "bdv111@snu.ac.kr")
+        self.assertEqual(data["first_name"], "Davin")
+        self.assertEqual(data["last_name"], "Byeon")
+        self.assertIn("last_login", data)
+        self.assertIn("date_joined", data)
+        self.assertNotIn("token", data)
+
+        participant = data["participant"]
+        self.assertIsNotNone(participant)
+        self.assertIn("id", participant)
+        self.assertEqual(participant["university"], "university")
+        self.assertTrue(participant["accepted"])
+        self.assertEqual(len(participant["seminars"]), 0)
+
+        self.assertIsNone(data["instructor"])
