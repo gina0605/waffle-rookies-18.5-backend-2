@@ -12,18 +12,17 @@ class PostUserTestCase(TestCase):
     client = Client()
 
     def setUp(self):
-        self.client.post(
-            '/api/v1/user/',
-            json.dumps({
-                "username": "davin111",
-                "password": "password",
-                "first_name": "Davin",
-                "last_name": "Byeon",
-                "email": "bdv111@snu.ac.kr",
-                "role": "participant",
-                "university": "서울대학교"
-            }),
-            content_type='application/json'
+        self.user1 = User.objects.create_user(
+            username="davin111",
+            password="password",
+            email="bdv111@snu.ac.kr",
+            first_name="Davin",
+            last_name="Byeon",
+        )
+        self.participant1 = ParticipantProfile.objects.create(
+            user=self.user1,
+            university="서울대학교",
+            accepted=True,
         )
 
     def test_post_user_duplicated_username(self):
