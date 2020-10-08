@@ -372,7 +372,7 @@ class PutUserMeTestCase(TestCase):
         )
         self.instructor_token = 'Token ' + Token.objects.create(user=inst).key
 
-    def test_put_user_unauthorized_request(self):
+    def test_put_user_unauthorized(self):
         response = self.client.put(         # Unauthorized
             '/api/v1/user/me/',
             json.dumps({
@@ -777,4 +777,106 @@ class GetUserPkTestCase(TestCase):
         self.assertEqual(len(participant["seminars"]), 0)
 
         self.assertIsNone(data["instructor"])
+
+class PostUserParticipant(TestCase):
+    client = Client()
+
+    def setUp(self):
+        inst = User.objects.create_user(
+            username="inst",
+            password="password",
+            email="inst@mail.com",
+        )
+        self.inst_token = 'Token ' + Token.objects.create(user=inst).key
+        self.inst_id = inst.id
+
+        inst_instructor_profile = InstructorProfile.objects.create(
+            user=inst,
+        )
+        self.inst_instructor_profile_id = inst_instructor_profile.id
+
+        partinst = User.objects.create_user(
+            username="partinst",
+            password="password",
+            email="partinst@mail.com",
+        )
+        self.partinst_token = 'Token ' + Token.objects.create(user=partinst).key
+        self.partinst_id = partinst.id
+
+        partinst_participant_profile = ParticipantProfile.objects.create(
+            user=partinst,
+        )
+        self.partinst_participant_profile_id = partinst_participant_profile.id
+
+        partinst_instructor_profile = InstructorProfile.objects.create(
+            user=partinst,
+        )
+        self.partinst_instructor_profile_id = partinst_instructor_profile.id
+
+    def test_user_participant_unauthorized(self):
+        response = self.client.post(         # Unauthorized
+            '/api/v1/user/participant/',
+            content_type='application/json',
+        )
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+        self.assertEqual(ParticipantProfile.objects.count(), 1)
+
+    def test_user_participant_wrong_request(self):
+        response = self.client.post(         # Wrong accepted
+            '/api/v1/user/participant/',
+            json.dumps({
+                "accepted": "dd",
+            }),
+            content_type='application/json',
+            HTTP_AUTHORIZATION=self.inst_token
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+        self.assertEqual(ParticipantProfile.objects.count(), 1)
+
+    def test_user_participant_request_by_participant(self):
+        response = self.client.post(         # Already a participant
+            '/api/v1/user/participant/',
+            content_type='application/json',
+            HTTP_AUTHORIZATION=self.partinst_token
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+        self.assertEqual(ParticipantProfile.objects.count(), 1)
+
+    def test_user_participant(self):
+        response = self.client.post(         # Correct
+            '/api/v1/user/participant/',
+            content_type='application/json',
+            HTTP_AUTHORIZATION=self.inst_token
+        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        data = response.json()
+        self.assertEqual(data["id"], self.inst_id)
+        self.assertEqual(data["username"], "inst")
+        self.assertEqual(data["email"], "inst@mail.com")
+        self.assertEqual(data["first_name"], "")
+        self.assertEqual(data["last_name"], "")
+        self.assertIn("last_login", data)
+        self.assertIn("date_joined", data)
+        self.assertNotIn("token", data)
+
+        participant = data["participant"]
+        self.assertIsNotNone(participant)
+        self.assertIn("id", participant)
+        self.assertEqual(participant["university"], "")
+        self.assertTrue(participant["accepted"])
+        self.assertEqual(len(participant["seminars"]), 0)
+
+        instructor = data["instructor"]
+        self.assertIsNotNone(instructor)
+        self.assertEqual(instructor["id"], self.inst_instructor_profile_id)
+        self.assertEqual(instructor["company"], "")
+        self.assertIsNone(instructor["year"])
+        self.assertIsNone(instructor["charge"])
+
+        self.assertEqual(ParticipantProfile.objects.count(), 2)
+
 
