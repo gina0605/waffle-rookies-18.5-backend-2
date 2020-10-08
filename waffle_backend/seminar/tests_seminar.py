@@ -18,9 +18,7 @@ class PostSeminarTestCase(TestCase):
             email="part@mail.com",
         )
         self.part_token = 'Token ' + Token.objects.create(user=part).key
-        ParticipantProfile.objects.create(
-            user=part,
-        )
+        ParticipantProfile.objects.create(user=part)
 
         partinst = User.objects.create_user(
             username="partinst",
@@ -29,12 +27,8 @@ class PostSeminarTestCase(TestCase):
         )
         self.partinst_token = 'Token ' + Token.objects.create(user=partinst).key
         self.partinst_id = partinst.id
-        ParticipantProfile.objects.create(
-            user=partinst,
-        )
-        InstructorProfile.objects.create(
-            user=partinst,
-        )
+        ParticipantProfile.objects.create(user=partinst)
+        InstructorProfile.objects.create(user=partinst)
 
         inst = User.objects.create_user(
             username="inst",
@@ -42,9 +36,7 @@ class PostSeminarTestCase(TestCase):
             email="inst@mail.com",
         )
         self.inst_token = 'Token ' + Token.objects.create(user=inst).key
-        InstructorProfile.objects.create(
-            user=inst,
-        )
+        InstructorProfile.objects.create(user=inst)
 
         inst2 = User.objects.create_user(
             username="inst2",
@@ -53,9 +45,7 @@ class PostSeminarTestCase(TestCase):
         )
         self.inst2_token = 'Token ' + Token.objects.create(user=inst2).key
         self.inst2_id = inst2.id
-        InstructorProfile.objects.create(
-            user=inst2,
-        )
+        InstructorProfile.objects.create(user=inst2)
 
         seminar = Seminar.objects.create(
             name="seminar1",
@@ -346,6 +336,71 @@ class PostSeminarTestCase(TestCase):
 
         self.assertEqual(Seminar.objects.count(), 3)
         self.assertEqual(UserSeminar.objects.count(), 4)
+
+
+class PutSeminarSeminaridTestCase(TestCase):
+    client = Client()
+
+    def setUp(self):
+        partinst = User.objects.create_user(
+            username="partinst",
+            password="password",
+            email="partinst@mail.com",
+        )
+        self.partinst_token = 'Token ' + Token.objects.create(user=partinst).key
+        ParticipantProfile.objects.create(user=partinst)
+        InstructorProfile.objects.create(user=partinst)
+
+        inst = User.objects.create_user(
+            username="inst",
+            password="password",
+            email="inst@mail.com",
+        )
+        self.inst_token = 'Token ' + Token.objects.create(user=inst).key
+        InstructorProfile.objects.create(user=inst)
+
+        seminar = Seminar.objects.create(
+            name="seminar1",
+            capacity=10,
+            count=5,
+            time=datetime.time(hour=14, minute=30),
+        )
+        self.seminar_id = seminar.id
+        UserSeminar.objects.create(
+            user=partinst,
+            seminar=seminar,
+            role="participant",
+        )
+        UserSeminar.objects.create(
+            user=inst,
+            seminar=seminar,
+            role="instructor",
+        )
+
+        seminar2 = Seminar.objects.create(
+            name="seminar2",
+            capacity=11,
+            count=6,
+            time=datetime.time(hour=15, minute=40),
+        )
+        UserSeminar.objects.create(
+            user=partinst,
+            seminar=seminar2,
+            role="instructor",
+        )
+
+    def test_put_seminar_seminarid_unauthorized(self):
+        response = self.client.put(         # Unauthorized
+            '/api/v1/seminar/{}/'.format(self.seminar_id),
+            json.dumps({
+                "name": "Seminar1",
+            }),
+            content_type='application/json',
+        )
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+        seminar = Seminar.objects.get(id=self.seminar_id)
+        self.assertEqual(seminar.name, "seminar1")
 
 
 
