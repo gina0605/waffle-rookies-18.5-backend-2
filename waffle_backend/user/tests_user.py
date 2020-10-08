@@ -456,3 +456,30 @@ class PutUserMeTestCase(TestCase):
 
         instructor_user = User.objects.get(username='inst123')
         self.assertEqual(instructor_user.email, 'bdv111@naver.com')
+
+
+class PutUserLoginTestCase(TestCase):
+    client = Client()
+
+    def setUp(self):
+        self.client.post(
+            '/api/v1/user/',
+            json.dumps({
+                "username": "part",
+                "password": "password",
+                "email": "bdv111@snu.ac.kr",
+                "role": "participant",
+            }),
+            content_type='application/json'
+        )
+
+    def test_put_user_login_incomplete_request(self):
+        response = self.client.post(        # No username
+            '/api/v1/user/login/',
+            json.dumps({
+                "password": "password",
+            }),
+            content_type='application/json'
+        )
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
