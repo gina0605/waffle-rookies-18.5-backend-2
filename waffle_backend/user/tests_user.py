@@ -574,6 +574,20 @@ class GetUserPkTestCase(TestCase):
         )
         self.participant_profile_id = participant_profile.id
 
+        part2 = User.objects.create_user(
+            username="part2",
+            password="password",
+            email="part2@mail.com",
+        )
+        self.part2_token = 'Token ' + Token.objects.create(user=part2).key
+        self.part2_id = part2.id
+
+        participant_profile2 = ParticipantProfile.objects.create(
+            user=part2,
+            accepted=False,
+        )
+        self.participant_profile2_id = participant_profile2.id
+
         inst = User.objects.create_user(
             username="inst",
             password="password",
@@ -587,6 +601,22 @@ class GetUserPkTestCase(TestCase):
             company="company1",
         )
         self.instructor_profile_id = instructor_profile.id
+
+        inst2 = User.objects.create_user(
+            username="inst2",
+            password="password",
+            email="inst2@mail.com",
+            first_name="CS",
+            last_name="Kim",
+        )
+        self.inst2_token = 'Token ' + Token.objects.create(user=inst2).key
+        self.inst2_id = inst2.id
+
+        instructor_profile2 = InstructorProfile.objects.create(
+            user=inst2,
+            year=0
+        )
+        self.instructor_profile2_id = instructor_profile2.id
 
         seminar = Seminar.objects.create(
             name="seminar1",
@@ -633,7 +663,7 @@ class GetUserPkTestCase(TestCase):
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
     def test_get_user_userid(self):
-        response = self.client.get(         # Correct
+        response = self.client.get(         # Correct, participant with seminar
             '/api/v1/user/{}/'.format(self.part_id),
             content_type='application/json',
             HTTP_AUTHORIZATION=self.part_token
@@ -665,8 +695,34 @@ class GetUserPkTestCase(TestCase):
 
         self.assertIsNone(data["instructor"])
 
+        response = self.client.get(         # Correct, instructor without seminar
+            '/api/v1/user/{}/'.format(self.inst2_id),
+            content_type='application/json',
+            HTTP_AUTHORIZATION=self.inst_token
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        data = response.json()
+        self.assertEqual(data["id"], self.inst2_id)
+        self.assertEqual(data["username"], "inst2")
+        self.assertEqual(data["email"], "inst2@mail.com")
+        self.assertEqual(data["first_name"], "CS")
+        self.assertEqual(data["last_name"], "Kim")
+        self.assertIn("last_login", data)
+        self.assertIn("date_joined", data)
+        self.assertNotIn("token", data)
+
+        self.assertIsNone(data["participant"])
+
+        instructor = data["instructor"]
+        self.assertIsNotNone(instructor)
+        self.assertEqual(instructor["id"], self.instructor_profile2_id)
+        self.assertEqual(instructor["company"], "")
+        self.assertEqual(instructor["year"], 0)
+        self.assertIsNone(instructor["charge"])
+
     def test_get_user_me(self):
-        response = self.client.get(         # Correct
+        response = self.client.get(         # Correct, instructor with seminar
             '/api/v1/user/me/',
             content_type='application/json',
             HTTP_AUTHORIZATION=self.inst_token
@@ -695,4 +751,30 @@ class GetUserPkTestCase(TestCase):
         self.assertEqual(charge["id"], self.seminar_id)
         self.assertEqual(charge["name"], "seminar1")
         self.assertIn("joined_at", charge)
+
+        response = self.client.get(         # Correct, participant without seminar
+            '/api/v1/user/me/',
+            content_type='application/json',
+            HTTP_AUTHORIZATION=self.part2_token
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        data = response.json()
+        self.assertEqual(data["id"], self.part2_id)
+        self.assertEqual(data["username"], "part2")
+        self.assertEqual(data["email"], "part2@mail.com")
+        self.assertEqual(data["first_name"], "")
+        self.assertEqual(data["last_name"], "")
+        self.assertIn("last_login", data)
+        self.assertIn("date_joined", data)
+        self.assertNotIn("token", data)
+
+        participant = data["participant"]
+        self.assertIsNotNone(participant)
+        self.assertEqual(participant["id"], self.participant_profile2_id)
+        self.assertEqual(participant["university"], "")
+        self.assertFalse(participant["accepted"])
+        self.assertEqual(len(participant["seminars"]), 0)
+
+        self.assertIsNone(data["instructor"])
 
