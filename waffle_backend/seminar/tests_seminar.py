@@ -1,5 +1,6 @@
 from django.contrib.auth.models import User
 from django.test import Client, TestCase
+from django.utils import timezone
 from rest_framework import status
 from rest_framework.authtoken.models import Token
 import json
@@ -348,6 +349,7 @@ class PutSeminarSeminaridTestCase(TestCase):
             email="partinst@mail.com",
         )
         self.partinst_token = 'Token ' + Token.objects.create(user=partinst).key
+        self.partinst_id = partinst.id
         ParticipantProfile.objects.create(user=partinst)
         InstructorProfile.objects.create(user=partinst)
 
@@ -357,6 +359,7 @@ class PutSeminarSeminaridTestCase(TestCase):
             email="inst@mail.com",
         )
         self.inst_token = 'Token ' + Token.objects.create(user=inst).key
+        self.inst_id = inst.id
         InstructorProfile.objects.create(user=inst)
 
         seminar = Seminar.objects.create(
@@ -364,12 +367,14 @@ class PutSeminarSeminaridTestCase(TestCase):
             capacity=10,
             count=5,
             time=datetime.time(hour=14, minute=30),
+            online=False,
         )
         self.seminar_id = seminar.id
         UserSeminar.objects.create(
             user=partinst,
             seminar=seminar,
             role="participant",
+            dropped_at=timezone.localtime(),
         )
         UserSeminar.objects.create(
             user=inst,
@@ -436,7 +441,7 @@ class PutSeminarSeminaridTestCase(TestCase):
             json.dumps({
                 "capacity": 0,
                 "name": "Seminar1",
-                "online": "F",
+                "online": "T",
             }),
             HTTP_AUTHORIZATION=self.inst_token,
             content_type='application/json',
@@ -446,7 +451,7 @@ class PutSeminarSeminaridTestCase(TestCase):
         seminar = Seminar.objects.get(id=self.seminar_id)
         self.assertEqual(seminar.capacity, 10)
         self.assertEqual(seminar.name, "seminar1")
-        self.assertTrue(seminar.online)
+        self.assertFalse(seminar.online)
 
         response = self.client.put(         # Capacity not number
             '/api/v1/seminar/{}/'.format(self.seminar_id),
@@ -514,8 +519,55 @@ class PutSeminarSeminaridTestCase(TestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
         seminar = Seminar.objects.get(id=self.seminar_id)
-        self.assertTrue(seminar.online)
+        self.assertFalse(seminar.online)
 
+    def test_put_seminar_seminarid(self):
+        response = self.client.put(         # Correct
+            '/api/v1/seminar/{}/'.format(self.seminar_id),
+            json.dumps({
+                "name": "Seminar1",
+                "capacity": 1,
+                "count": 20,
+                "time": "10:10",
+            }),
+            HTTP_AUTHORIZATION=self.inst_token,
+            content_type='application/json',
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        data = response.json()
+        self.assertEqual(data["id"], self.seminar_id)
+        self.assertEqual(data["name"], "Seminar1")
+        self.assertEqual(data["capacity"], 1)
+        self.assertEqual(data["count"], 20)
+        self.assertEqual(data["time"], "10:10")
+        self.assertFalse(data["online"])
+        self.assertIn("instructors", data)
+        self.assertEqual(len(data["instructors"]), 1)
+        instructor = data["instructors"][0]
+        self.assertEqual(instructor["id"], self.inst_id)
+        self.assertEqual(instructor["username"], "inst")
+        self.assertEqual(instructor["email"], "inst@mail.com")
+        self.assertEqual(instructor["first_name"], "")
+        self.assertEqual(instructor["last_name"], "")
+        self.assertIn("joined_at", instructor)
+        self.assertIn("participants", data)
+        self.assertEqual(len(data["participants"]), 1)
+        participant = data["participants"][0]
+        self.assertEqual(participant["id"], self.partinst_id)
+        self.assertEqual(participant["username"], "partinst")
+        self.assertEqual(participant["email"], "partinst@mail.com")
+        self.assertEqual(participant["first_name"], "")
+        self.assertEqual(participant["last_name"], "")
+        self.assertIn("joined_at", participant)
+        self.assertFalse(participant["is_active"])
+        self.assertIsNotNone(participant["dropped_at"])
+
+        seminar = Seminar.objects.get(id=self.seminar_id)
+        self.assertEqual(seminar.name, "Seminar1")
+        self.assertEqual(seminar.capacity, 1)
+        self.assertEqual(seminar.count, 20)
+        self.assertFalse(seminar.online)
 
 
 
