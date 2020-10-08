@@ -13,15 +13,15 @@ class PostUserTestCase(TestCase):
 
     def setUp(self):
         self.user1 = User.objects.create_user(
-            username="davin111",
+            username="user1",
             password="password",
-            email="bdv111@snu.ac.kr",
-            first_name="Davin",
-            last_name="Byeon",
+            email="user1@mail.com",
+            first_name="Kildong",
+            last_name="Hong",
         )
         self.participant1 = ParticipantProfile.objects.create(
             user=self.user1,
-            university="서울대학교",
+            university="university1",
             accepted=True,
         )
 
@@ -29,13 +29,13 @@ class PostUserTestCase(TestCase):
         response = self.client.post(        # Same username
             '/api/v1/user/',
             json.dumps({
-                "username": "davin111",
+                "username": "user1",
                 "password": "password",
-                "first_name": "Davin",
-                "last_name": "Byeon",
-                "email": "bdv111@snu.ac.kr",
+                "first_name": "CS",
+                "last_name": "Kim",
+                "email": "kcs@mail.com",
                 "role": "participant",
-                "university": "서울대학교"
+                "university": "university1"
             }),
             content_type='application/json'
         )
@@ -49,11 +49,11 @@ class PostUserTestCase(TestCase):
             '/api/v1/user/',
             json.dumps({
                 "password": "password",
-                "first_name": "Davin",
-                "last_name": "Byeon",
-                "email": "bdv111@snu.ac.kr",
-                "role": "wrong_role",
-                "university": "서울대학교"
+                "first_name": "CS",
+                "last_name": "Kim",
+                "email": "kcs@mail.com",
+                "role": "participant",
+                "university": "university1"
             }),
             content_type='application/json'
         )
@@ -62,12 +62,12 @@ class PostUserTestCase(TestCase):
         response = self.client.post(        # No password
             '/api/v1/user/',
             json.dumps({
-                "username": "participant",
-                "first_name": "Davin",
-                "last_name": "Byeon",
-                "email": "bdv111@snu.ac.kr",
-                "role": "wrong_role",
-                "university": "서울대학교"
+                "username": "user2",
+                "first_name": "CS",
+                "last_name": "Kim",
+                "email": "kcs@mail.com",
+                "role": "participant",
+                "university": "university1"
             }),
             content_type='application/json'
         )
@@ -76,13 +76,13 @@ class PostUserTestCase(TestCase):
         response = self.client.post(        # Wrong role
             '/api/v1/user/',
             json.dumps({
-                "username": "participant",
+                "username": "user2",
                 "password": "password",
-                "first_name": "Davin",
-                "last_name": "Byeon",
-                "email": "bdv111@snu.ac.kr",
+                "first_name": "CS",
+                "last_name": "Kim",
+                "email": "kcs@mail.com",
                 "role": "wrong_role",
-                "university": "서울대학교"
+                "university": "university1"
             }),
             content_type='application/json'
         )
@@ -91,12 +91,12 @@ class PostUserTestCase(TestCase):
         response = self.client.post(        # No role
             '/api/v1/user/',
             json.dumps({
-                "username": "participant",
+                "username": "user2",
                 "password": "password",
-                "first_name": "Davin",
-                "last_name": "Byeon",
-                "email": "bdv111@snu.ac.kr",
-                "university": "서울대학교"
+                "first_name": "CS",
+                "last_name": "Kim",
+                "email": "kcs@mail.com",
+                "university": "university1"
             }),
             content_type='application/json'
         )
@@ -105,12 +105,12 @@ class PostUserTestCase(TestCase):
         response = self.client.post(        # No email
             '/api/v1/user/',
             json.dumps({
-                "username": "participant",
+                "username": "user2",
                 "password": "password",
-                "first_name": "Davin",
-                "last_name": "Byeon",
+                "first_name": "CS",
+                "last_name": "Kim",
                 "role": "participant",
-                "university": "서울대학교"
+                "university": "university1"
             }),
             content_type='application/json'
         )
@@ -123,11 +123,12 @@ class PostUserTestCase(TestCase):
         response = self.client.post(        # Only first_name, no last_name
             '/api/v1/user/',
             json.dumps({
-                "username": "participant",
+                "username": "user2",
                 "password": "password",
-                "first_name": "Davin",
+                "first_name": "CS",
+                "email": "kcs@mail.com",
                 "role": "participant",
-                "university": "서울대학교"
+                "university": "university1"
             }),
             content_type='application/json'
         )
@@ -136,12 +137,13 @@ class PostUserTestCase(TestCase):
         response = self.client.post(        # Only last_name, first_name blank
             '/api/v1/user/',
             json.dumps({
-                "username": "participant",
+                "username": "user2",
                 "password": "password",
                 "first_name": "",
-                "last_name": "Byeon",
+                "last_name": "Kim",
+                "email": "kcs@mail.com",
                 "role": "participant",
-                "university": "서울대학교"
+                "university": "university1"
             }),
             content_type='application/json'
         )
@@ -150,12 +152,13 @@ class PostUserTestCase(TestCase):
         response = self.client.post(        # Number in first_name
             '/api/v1/user/',
             json.dumps({
-                "username": "participant",
+                "username": "user2",
                 "password": "password",
-                "first_name": "Davin0",
-                "last_name": "Byeon",
+                "first_name": "CS0",
+                "last_name": "Kim",
+                "email": "kcs@mail.com",
                 "role": "participant",
-                "university": "서울대학교"
+                "university": "university1"
             }),
             content_type='application/json'
         )
@@ -168,13 +171,13 @@ class PostUserTestCase(TestCase):
         response = self.client.post(        # Same username
             '/api/v1/user/',
             json.dumps({
-                "username": "davin111",
+                "username": "user1",
                 "password": "password",
-                "first_name": "Davin",
-                "last_name": "Byeon",
-                "email": "bdv111@snu.ac.kr",
+                "first_name": "CS",
+                "last_name": "Kim",
+                "email": "kcs@mail.com",
                 "role": "participant",
-                "university": "서울대학교"
+                "university": "university1"
             }),
             content_type='application/json'
         )
