@@ -68,7 +68,15 @@ class UserSerializer(serializers.ModelSerializer):
         role = data.get('role')
         serializer = None
         data_copied = data.copy()
-        if not role:
+        status = self.context['status']
+        if status == 'create':               # create
+            data_copied.update(user=None)
+            if role == 'participant':
+                serializer = ParticipantProfileSerializer(data=data_copied)
+            elif role == 'instructor':
+                serializer = InstructorProfileSerializer(data=data_copied)
+            serializer.is_valid(raise_exception=True)
+        elif status == 'update':        # update
             if hasattr(self.instance, 'participant'):
                 data_copied.pop('accepted', None)
                 serializer = ParticipantProfileSerializer(self.instance.participant, data=data_copied, partial=True)
@@ -77,13 +85,8 @@ class UserSerializer(serializers.ModelSerializer):
                 serializer = InstructorProfileSerializer(self.instance.instructor, data=data_copied, partial=True)
                 serializer.is_valid(raise_exception=True)
         else:
-            data_copied.update(user=None)
-            if role == 'participant':
-                serializer = ParticipantProfileSerializer(data=data_copied)
-            elif role == 'instructor':
-                serializer = InstructorProfileSerializer(data=data_copied)
-            serializer.is_valid(raise_exception=True)
-
+            print("No Status!!")
+            data = None
         return data
 
     def create(self, validated_data):

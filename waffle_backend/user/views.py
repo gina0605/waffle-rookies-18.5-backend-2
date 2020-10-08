@@ -20,8 +20,14 @@ class UserViewSet(viewsets.GenericViewSet):
             return (AllowAny(), )
         return self.permission_classes
 
+    def get_serializer(self, *args, **kwargs):
+        serializer_class = self.get_serializer_class()
+        kwargs['context'] = self.get_serializer_context()
+        kwargs['context'].update({'status':kwargs.pop('status', '')})
+        return serializer_class(*args, **kwargs)
+
     def create(self, request):
-        serializer = self.get_serializer(data=request.data)
+        serializer = self.get_serializer(data=request.data, status='create')
         serializer.is_valid(raise_exception=True)
         try:
             user = serializer.save()
@@ -68,8 +74,7 @@ class UserViewSet(viewsets.GenericViewSet):
 
         user = request.user
         data = request.data.copy()
-        data.pop('role', '')
-        serializer = self.get_serializer(user, data=data, partial=True)
+        serializer = self.get_serializer(user, data=data, partial=True, status='update')
         serializer.is_valid(raise_exception=True)
         serializer.update(user, serializer.validated_data)
         return Response(serializer.data)
