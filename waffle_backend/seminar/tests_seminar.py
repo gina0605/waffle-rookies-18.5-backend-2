@@ -17,7 +17,7 @@ class PostSeminar(TestCase):
             password="password",
             email="part@mail.com",
         )
-        self.part_token = 'Token ' + Token.objects.create(user=part)
+        self.part_token = 'Token ' + Token.objects.create(user=part).key
 
         ParticipantProfile.objects.create(
             user=part,
@@ -28,7 +28,7 @@ class PostSeminar(TestCase):
             password="password",
             email="partinst@mail.com",
         )
-        self.partinst_token = 'Token ' + Token.objects.create(user=partinst)
+        self.partinst_token = 'Token ' + Token.objects.create(user=partinst).key
 
         ParticipantProfile.objects.create(
             user=partinst,
@@ -43,7 +43,7 @@ class PostSeminar(TestCase):
             password="password",
             email="inst@mail.com",
         )
-        self.inst_token = 'Token ' + Token.objects.create(user=inst)
+        self.inst_token = 'Token ' + Token.objects.create(user=inst).key
 
         InstructorProfile.objects.create(
             user=inst,
@@ -60,25 +60,80 @@ class PostSeminar(TestCase):
             user=partinst,
             seminar=seminar,
             role="participant",
-            dropped_at=None,
         )
 
         UserSeminar.objects.create(
             user=inst,
             seminar=seminar,
             role="instructor",
-            dropped_at=None,
         )
 
-    def post_seminar_unauthorized(self):
-        response = self.client.get(         # Unauthorized
+    def test_post_seminar_unauthorized(self):
+        response = self.client.post(         # Unauthorized
             '/api/v1/seminar/',
             json.dumps({
                 "name": "seminar2",
                 "capacity": 9,
                 "count": 4,
-                "time": datetime.time(hour=13, minute=20),
+                "time": "13:20",
             }),
             content_type='application/json',
         )
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+        self.assertEqual(Seminar.objects.count(), 1)
+        self.assertEqual(UserSeminar.objects.count(), 2)
+
+    def test_post_seminar_incomplete_request(self):
+        response = self.client.post(         # Name blank
+            '/api/v1/seminar/',
+            json.dumps({
+                "name": "",
+                "capacity": 9,
+                "count": 4,
+                "time": "13:20",
+            }),
+            HTTP_AUTHORIZATION=self.partinst_token,
+            content_type='application/json',
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+        response = self.client.post(         # No capacity
+            '/api/v1/seminar/',
+            json.dumps({
+                "name": "seminar2",
+                "count": 4,
+                "time": "13:20",
+            }),
+            HTTP_AUTHORIZATION=self.partinst_token,
+            content_type='application/json',
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+        response = self.client.post(         # No count
+            '/api/v1/seminar/',
+            json.dumps({
+                "name": "seminar2",
+                "capacity": 9,
+                "time": "13:20",
+            }),
+            HTTP_AUTHORIZATION=self.partinst_token,
+            content_type='application/json',
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+        response = self.client.post(         # No time
+            '/api/v1/seminar/',
+            json.dumps({
+                "name": "seminar2",
+                "capacity": 9,
+                "count": 4,
+            }),
+            HTTP_AUTHORIZATION=self.partinst_token,
+            content_type='application/json',
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+        self.assertEqual(Seminar.objects.count(), 1)
+        self.assertEqual(UserSeminar.objects.count(), 2)
+
