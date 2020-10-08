@@ -192,7 +192,7 @@ class PostUserTestCase(TestCase):
         user_count = User.objects.count()
         self.assertEqual(user_count, 1)
 
-        response = self.client.post(        # Correct
+        response = self.client.post(        # Correct, first_name and last_name both exist
             '/api/v1/user/',
             json.dumps({
                 "username": "participant",
@@ -226,12 +226,46 @@ class PostUserTestCase(TestCase):
 
         self.assertIsNone(data["instructor"])
 
+        response = self.client.post(        # Correct, first_name and last_name both not exist
+            '/api/v1/user/',
+            json.dumps({
+                "username": "instructor",
+                "password": "password",
+                "email": "bdv111@snu.ac.kr",
+                "role": "instructor",
+                "university": "서울대학교",
+                "company": "company"
+            }),
+            content_type='application/json'
+        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        data = response.json()
+        self.assertIn("id", data)
+        self.assertEqual(data["username"], "instructor")
+        self.assertEqual(data["email"], "bdv111@snu.ac.kr")
+        self.assertEqual(data["first_name"], "")
+        self.assertEqual(data["last_name"], "")
+        self.assertIn("last_login", data)
+        self.assertIn("date_joined", data)
+        self.assertIn("token", data)
+
+        self.assertIsNone(data["participant"])
+
+        instructor = data["instructor"]
+        self.assertIsNotNone(instructor)
+        self.assertIn("id", instructor)
+        self.assertEqual(instructor["company"], "company")
+        self.assertIsNone(instructor["year"])
+        self.assertIsNone(instructor["charge"])
+
+
         user_count = User.objects.count()
-        self.assertEqual(user_count, 2)
+        self.assertEqual(user_count, 3)
         participant_count = ParticipantProfile.objects.count()
         self.assertEqual(participant_count, 2)
         instructor_count = InstructorProfile.objects.count()
-        self.assertEqual(instructor_count, 0)
+        self.assertEqual(instructor_count, 1)
 
 
 class PutUserMeTestCase(TestCase):
