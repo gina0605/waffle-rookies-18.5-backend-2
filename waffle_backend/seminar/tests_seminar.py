@@ -84,6 +84,40 @@ class PostSeminar(TestCase):
         self.assertEqual(Seminar.objects.count(), 1)
         self.assertEqual(UserSeminar.objects.count(), 2)
 
+    def test_post_seminar_request_by_noninstructor(self):
+        response = self.client.post(         # Not instructor
+            '/api/v1/seminar/',
+            json.dumps({
+                "name": "seminar2",
+                "capacity": 9,
+                "count": 4,
+                "time": "13:20",
+            }),
+            HTTP_AUTHORIZATION=self.part_token,
+            content_type='application/json',
+        )
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+        self.assertEqual(Seminar.objects.count(), 1)
+        self.assertEqual(UserSeminar.objects.count(), 2)
+
+    def test_post_seminar_request_by_already_instructor(self):
+        response = self.client.post(         # Already instructing another seminar
+            '/api/v1/seminar/',
+            json.dumps({
+                "name": "seminar2",
+                "capacity": 9,
+                "count": 4,
+                "time": "13:20",
+            }),
+            HTTP_AUTHORIZATION=self.inst_token,
+            content_type='application/json',
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+        self.assertEqual(Seminar.objects.count(), 1)
+        self.assertEqual(UserSeminar.objects.count(), 2)
+
     def test_post_seminar_incomplete_request(self):
         response = self.client.post(         # Name blank
             '/api/v1/seminar/',
@@ -137,39 +171,71 @@ class PostSeminar(TestCase):
         self.assertEqual(Seminar.objects.count(), 1)
         self.assertEqual(UserSeminar.objects.count(), 2)
 
-    def test_post_seminar_request_by_noninstructor(self):
-        response = self.client.post(         # Not instructor
+    def test_post_seminar_wrong_request(self):
+        response = self.client.post(         # capacity not number
             '/api/v1/seminar/',
             json.dumps({
                 "name": "seminar2",
-                "capacity": 9,
+                "capacity": "a",
                 "count": 4,
                 "time": "13:20",
             }),
-            HTTP_AUTHORIZATION=self.part_token,
-            content_type='application/json',
-        )
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
-
-        self.assertEqual(Seminar.objects.count(), 1)
-        self.assertEqual(UserSeminar.objects.count(), 2)
-
-    def test_post_seminar_request_by_already_instructor(self):
-        response = self.client.post(         # Already instructing another seminar
-            '/api/v1/seminar/',
-            json.dumps({
-                "name": "seminar2",
-                "capacity": 9,
-                "count": 4,
-                "time": "13:20",
-            }),
-            HTTP_AUTHORIZATION=self.inst_token,
+            HTTP_AUTHORIZATION=self.partinst_token,
             content_type='application/json',
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
-        self.assertEqual(Seminar.objects.count(), 1)
-        self.assertEqual(UserSeminar.objects.count(), 2)
+        response = self.client.post(         # capacity < 0
+            '/api/v1/seminar/',
+            json.dumps({
+                "name": "seminar2",
+                "capacity": -1,
+                "count": 4,
+                "time": "13:20",
+            }),
+            HTTP_AUTHORIZATION=self.partinst_token,
+            content_type='application/json',
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+        response = self.client.post(         # count not number
+            '/api/v1/seminar/',
+            json.dumps({
+                "name": "seminar2",
+                "capacity": 9,
+                "count": "a",
+                "time": "13:20",
+            }),
+            HTTP_AUTHORIZATION=self.partinst_token,
+            content_type='application/json',
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+        response = self.client.post(         # count < 0
+            '/api/v1/seminar/',
+            json.dumps({
+                "name": "seminar2",
+                "capacity": 9,
+                "count": -1,
+                "time": "13:20",
+            }),
+            HTTP_AUTHORIZATION=self.partinst_token,
+            content_type='application/json',
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+        response = self.client.post(         # time format wrong
+            '/api/v1/seminar/',
+            json.dumps({
+                "name": "seminar2",
+                "capacity": 9,
+                "count": 4,
+                "time": "13:20:10",
+            }),
+            HTTP_AUTHORIZATION=self.partinst_token,
+            content_type='application/json',
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
 
 
