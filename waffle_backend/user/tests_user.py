@@ -255,6 +255,88 @@ class PostUserTestCase(TestCase):
         self.assertEqual(instructor_count, 1)
 
 
+class PutUserLoginTestCase(TestCase):
+    client = Client()
+
+    def setUp(self):
+        self.client.post(
+            '/api/v1/user/',
+            json.dumps({
+                "username": "part",
+                "password": "password",
+                "email": "bdv111@snu.ac.kr",
+                "role": "participant",
+            }),
+            content_type='application/json'
+        )
+
+    def test_put_user_login_incomplete_request(self):
+        response = self.client.post(        # No username
+            '/api/v1/user/login/',
+            json.dumps({
+                "password": "password",
+            }),
+            content_type='application/json'
+        )
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+        response = self.client.post(        # No password
+            '/api/v1/user/login/',
+            json.dumps({
+                "username": "part",
+            }),
+            content_type='application/json'
+        )
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+        response = self.client.post(        # Wrong username
+            '/api/v1/user/login/',
+            json.dumps({
+                "username": "part_wrong",
+                "password": "password"
+            }),
+            content_type='application/json'
+        )
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+        response = self.client.post(        # Wrong password
+            '/api/v1/user/login/',
+            json.dumps({
+                "username": "part",
+                "password": "password_wrong"
+            }),
+            content_type='application/json'
+        )
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_put_user_login_request(self):
+        response = self.client.put(        # Correct
+            '/api/v1/user/login/',
+            json.dumps({
+                "username": "part",
+                "password": "password",
+            }),
+            content_type='application/json'
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        data = response.json()
+        self.assertIn("id", data)
+        self.assertEqual(data["username"], "part")
+        self.assertEqual(data["email"], "bdv111@snu.ac.kr")
+        self.assertIn("last_login", data)
+        self.assertIn("date_joined", data)
+        self.assertIn("token", data)
+
+        participant = data["participant"]
+        self.assertIsNotNone(participant)
+        self.assertIn("id", participant)
+        self.assertEqual(participant["accepted"], True)
+        self.assertEqual(len(participant["seminars"]), 0)
+
+        self.assertIsNone(data["instructor"])
+
+
 class PutUserMeTestCase(TestCase):
     client = Client()
 
@@ -457,29 +539,4 @@ class PutUserMeTestCase(TestCase):
         instructor_user = User.objects.get(username='inst123')
         self.assertEqual(instructor_user.email, 'bdv111@naver.com')
 
-
-class PutUserLoginTestCase(TestCase):
-    client = Client()
-
-    def setUp(self):
-        self.client.post(
-            '/api/v1/user/',
-            json.dumps({
-                "username": "part",
-                "password": "password",
-                "email": "bdv111@snu.ac.kr",
-                "role": "participant",
-            }),
-            content_type='application/json'
-        )
-
-    def test_put_user_login_incomplete_request(self):
-        response = self.client.post(        # No username
-            '/api/v1/user/login/',
-            json.dumps({
-                "password": "password",
-            }),
-            content_type='application/json'
-        )
-        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
