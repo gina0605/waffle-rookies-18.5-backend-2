@@ -417,7 +417,7 @@ class PutSeminarSeminaridTestCase(TestCase):
         self.assertEqual(seminar.name, "seminar1")
 
     def test_put_seminar_seminarid_wrong_id(self):
-        response = self.client.put(         # Not instructor of the seminar
+        response = self.client.put(         # wrong id
             '/api/v1/seminar/3/',
             json.dumps({
                 "name": "Seminar1",
@@ -429,6 +429,93 @@ class PutSeminarSeminaridTestCase(TestCase):
 
         seminar = Seminar.objects.get(id=self.seminar_id)
         self.assertEqual(seminar.name, "seminar1")
+
+    def test_put_seminar_seminarid_wrong_request(self):
+        response = self.client.put(         # Capacity smaller than number of participants
+            '/api/v1/seminar/{}/'.format(self.seminar_id),
+            json.dumps({
+                "capacity": 0,
+                "name": "Seminar1",
+                "online": "F",
+            }),
+            HTTP_AUTHORIZATION=self.inst_token,
+            content_type='application/json',
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+        seminar = Seminar.objects.get(id=self.seminar_id)
+        self.assertEqual(seminar.capacity, 10)
+        self.assertEqual(seminar.name, "seminar1")
+        self.assertTrue(seminar.online)
+
+        response = self.client.put(         # Capacity not number
+            '/api/v1/seminar/{}/'.format(self.seminar_id),
+            json.dumps({
+                "capacity": "a",
+            }),
+            HTTP_AUTHORIZATION=self.inst_token,
+            content_type='application/json',
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+        seminar = Seminar.objects.get(id=self.seminar_id)
+        self.assertEqual(seminar.capacity, 10)
+
+        response = self.client.put(         # count < 0
+            '/api/v1/seminar/{}/'.format(self.seminar_id),
+            json.dumps({
+                "count": -1,
+                "name": "Seminar1",
+            }),
+            HTTP_AUTHORIZATION=self.inst_token,
+            content_type='application/json',
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+        seminar = Seminar.objects.get(id=self.seminar_id)
+        self.assertEqual(seminar.count, 5)
+        self.assertEqual(seminar.name, "seminar1")
+
+        response = self.client.put(         # count not number
+            '/api/v1/seminar/{}/'.format(self.seminar_id),
+            json.dumps({
+                "count": "z",
+            }),
+            HTTP_AUTHORIZATION=self.inst_token,
+            content_type='application/json',
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+        seminar = Seminar.objects.get(id=self.seminar_id)
+        self.assertEqual(seminar.count, 5)
+
+        response = self.client.put(         # time wrong format
+            '/api/v1/seminar/{}/'.format(self.seminar_id),
+            json.dumps({
+                "time": "12",
+                "count": 7,
+            }),
+            HTTP_AUTHORIZATION=self.inst_token,
+            content_type='application/json',
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+        seminar = Seminar.objects.get(id=self.seminar_id)
+        self.assertEqual(seminar.count, 5)
+
+        response = self.client.put(         # wrong online
+            '/api/v1/seminar/{}/'.format(self.seminar_id),
+            json.dumps({
+                "online": "d"
+            }),
+            HTTP_AUTHORIZATION=self.inst_token,
+            content_type='application/json',
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+        seminar = Seminar.objects.get(id=self.seminar_id)
+        self.assertTrue(seminar.online)
+
 
 
 
