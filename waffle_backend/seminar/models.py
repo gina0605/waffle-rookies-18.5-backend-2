@@ -10,7 +10,7 @@ class Seminar(models.Model):
     time = models.TimeField()
     start_date = models.DateField(null=True)
     online = models.BooleanField(default=True)
-    created_at = models.DateTimeField(auto_now_add=True)
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True)
     updated_at = models.DateTimeField(auto_now=True)
 
 
