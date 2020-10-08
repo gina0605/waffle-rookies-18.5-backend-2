@@ -32,7 +32,7 @@ class SeminarViewSet(viewsets.GenericViewSet):
                 {"error": "Only instructors can create seminars"},
                 status=status.HTTP_403_FORBIDDEN
             )
-        if UserSeminar.objects.filter(user=user, role='instructor').exists():
+        if user.user_seminars.filter(role='instructor').exists():
             return Response(
                 {"error": "The user is an instructor of another seminar"},
                 status=status.HTTP_400_BAD_REQUEST
@@ -100,11 +100,11 @@ class SeminarViewSet(viewsets.GenericViewSet):
         user = request.user
         seminar = self.get_object()
         if request.method == 'POST':
-            return self.attend_seminar(user, seminar, role=request.data.get('role', ''))
+            return self._attend_seminar(user, seminar, role=request.data.get('role', ''))
         elif request.method == 'DELETE':
-            return self.drop_seminar(user, seminar)
+            return self._drop_seminar(user, seminar)
 
-    def attend_seminar(self, user, seminar, role):
+    def _attend_seminar(self, user, seminar, role):
         if role not in ('participant', 'instructor'):
             return Response(
                 {"error": "Role should be participant or instructor"},
@@ -157,7 +157,7 @@ class SeminarViewSet(viewsets.GenericViewSet):
         )
         return Response(self.get_serializer(seminar).data, status=status.HTTP_201_CREATED)
 
-    def drop_seminar(self, user, seminar):
+    def _drop_seminar(self, user, seminar):
         try:
             userseminar = user.user_seminars.get(seminar=seminar)
         except ObjectDoesNotExist:
