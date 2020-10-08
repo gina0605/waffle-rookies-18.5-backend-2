@@ -138,7 +138,7 @@ class SeminarViewSet(viewsets.GenericViewSet):
                 role='participant',
                 dropped_at=None,
             ).count()
-            if participants == seminar.capacity:
+            if participants >= seminar.capacity:
                 return Response(
                     {"error": "This seminar is already full"},
                     status=status.HTTP_400_BAD_REQUEST

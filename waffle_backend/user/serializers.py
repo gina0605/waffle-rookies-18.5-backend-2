@@ -114,10 +114,11 @@ class UserSerializer(serializers.ModelSerializer):
             participant.university = validated_data.pop('university', participant.university)
             participant.save()
         if hasattr(instance, 'instructor'):
-            instructor = instance.instructor
-            instructor.company = validated_data.pop('company', instructor.company)
-            instructor.year = validated_data.pop('year', instructor.year)
-            instructor.save()
+            if 'company' in validated_data or 'year' in validated_data:
+                instructor = instance.instructor
+                instructor.company = validated_data.pop('company', instructor.company)
+                instructor.year = validated_data.pop('year', instructor.year)
+                instructor.save()
         super(UserSerializer, self).update(instance, validated_data)
 
 
@@ -157,7 +158,7 @@ class InstructorProfileSerializer(serializers.ModelSerializer):
     def get_charge(self, participant):
         user = participant.user
         try:
-            queryset = user.user_seminars.get(role='instructor')
+            userseminar = user.user_seminars.get(role='instructor')
         except ObjectDoesNotExist:
             return None
-        return InstructorSeminarSerializer(queryset, context=self.context).data
+        return InstructorSeminarSerializer(userseminar, context=self.context).data
