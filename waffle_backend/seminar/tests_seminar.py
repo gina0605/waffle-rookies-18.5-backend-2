@@ -416,5 +416,19 @@ class PutSeminarSeminaridTestCase(TestCase):
         seminar = Seminar.objects.get(id=self.seminar_id)
         self.assertEqual(seminar.name, "seminar1")
 
+    def test_put_seminar_seminarid_wrong_id(self):
+        response = self.client.put(         # Not instructor of the seminar
+            '/api/v1/seminar/3/',
+            json.dumps({
+                "name": "Seminar1",
+            }),
+            HTTP_AUTHORIZATION=self.partinst_token,
+            content_type='application/json',
+        )
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+        seminar = Seminar.objects.get(id=self.seminar_id)
+        self.assertEqual(seminar.name, "seminar1")
+
 
 
