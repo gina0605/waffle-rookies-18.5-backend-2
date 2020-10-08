@@ -78,15 +78,15 @@ class SeminarViewSet(viewsets.GenericViewSet):
             .filter(name__contains=name)\
             .prefetch_related(
                 Prefetch(
-                    'user_seminar',
+                    'user_seminars',
                     queryset=UserSeminar.objects.filter(role='instructor'),
                     to_attr='userseminar_instructors'
                 )
             ).prefetch_related('userseminar_instructors__user')
         seminars = seminars.annotate(
             participant_count=Count(
-                'user_seminar',
-                filter=Q(user_seminar__role='participant') & Q(user_seminar__dropped_at=None)
+                'user_seminars',
+                filter=Q(user_seminars__role='participant') & Q(user_seminars__dropped_at=None)
             )
         )
         if param.get('order', '') == 'earliest':

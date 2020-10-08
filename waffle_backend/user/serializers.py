@@ -123,7 +123,7 @@ class UserSerializer(serializers.ModelSerializer):
 
 class ParticipantProfileSerializer(serializers.ModelSerializer):
     seminars = serializers.SerializerMethodField(read_only=True)
-    accepted = serializers.NullBooleanField(default=True)
+    accepted = serializers.BooleanField(default=True)
 
     class Meta:
         model = ParticipantProfile
