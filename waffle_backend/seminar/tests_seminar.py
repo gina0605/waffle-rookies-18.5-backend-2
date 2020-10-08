@@ -29,6 +29,7 @@ class PostSeminar(TestCase):
             email="partinst@mail.com",
         )
         self.partinst_token = 'Token ' + Token.objects.create(user=partinst).key
+        self.partinst_id = partinst.id
 
         ParticipantProfile.objects.create(
             user=partinst,
@@ -47,6 +48,18 @@ class PostSeminar(TestCase):
 
         InstructorProfile.objects.create(
             user=inst,
+        )
+
+        inst2 = User.objects.create_user(
+            username="inst2",
+            password="password",
+            email="inst2@mail.com",
+        )
+        self.inst2_token = 'Token ' + Token.objects.create(user=inst2).key
+        self.inst2_id = inst2.id
+
+        InstructorProfile.objects.create(
+            user=inst2,
         )
 
         seminar = Seminar.objects.create(
@@ -253,6 +266,72 @@ class PostSeminar(TestCase):
 
         self.assertEqual(Seminar.objects.count(), 1)
         self.assertEqual(UserSeminar.objects.count(), 2)
+
+    def test_post_seminar(self):
+        response = self.client.post(         # Correct
+            '/api/v1/seminar/',
+            json.dumps({
+                "name": "seminar2",
+                "capacity": 9,
+                "count": 4,
+                "time": "13:20",
+            }),
+            HTTP_AUTHORIZATION=self.partinst_token,
+            content_type='application/json',
+        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        data = response.json()
+        self.assertIn("id", data)
+        self.assertEqual(data["name"], "seminar2")
+        self.assertEqual(data["capacity"], 9)
+        self.assertEqual(data["count"], 4)
+        self.assertEqual(data["time"], "13:20")
+        self.assertTrue(data["online"])
+        self.assertEqual(len(data["instructors"]), 1)
+        instructor = data["instructors"][0]
+        self.assertEqual(instructor["id"], self.partinst_id)
+        self.assertEqual(instructor["username"], "partinst")
+        self.assertEqual(instructor["email"], "partinst@mail.com")
+        self.assertEqual(instructor["first_name"], "")
+        self.assertEqual(instructor["last_name"], "")
+        self.assertIn("joined_at", instructor)
+        self.assertEqual(len(data["participants"]), 0)
+
+
+        response = self.client.post(         # Correct
+            '/api/v1/seminar/',
+            json.dumps({
+                "name": "seminar2",
+                "capacity": 9,
+                "count": 4,
+                "time": "13:20",
+                "online": "F",
+            }),
+            HTTP_AUTHORIZATION=self.inst2_token,
+            content_type='application/json',
+        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        data = response.json()
+        self.assertIn("id", data)
+        self.assertEqual(data["name"], "seminar2")
+        self.assertEqual(data["capacity"], 9)
+        self.assertEqual(data["count"], 4)
+        self.assertEqual(data["time"], "13:20")
+        self.assertFalse(data["online"])
+        self.assertEqual(len(data["instructors"]), 1)
+        instructor = data["instructors"][0]
+        self.assertEqual(instructor["id"], self.inst2_id)
+        self.assertEqual(instructor["username"], "inst2")
+        self.assertEqual(instructor["email"], "inst2@mail.com")
+        self.assertEqual(instructor["first_name"], "")
+        self.assertEqual(instructor["last_name"], "")
+        self.assertIn("joined_at", instructor)
+        self.assertEqual(len(data["participants"]), 0)
+
+        self.assertEqual(Seminar.objects.count(), 3)
+        self.assertEqual(UserSeminar.objects.count(), 4)
 
 
 
