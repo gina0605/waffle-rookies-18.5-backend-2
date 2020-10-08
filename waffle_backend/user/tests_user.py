@@ -170,24 +170,6 @@ class PostUserTestCase(TestCase):
         self.assertEqual(user_count, 1)
 
     def test_post_user(self):
-        response = self.client.post(        # Same username
-            '/api/v1/user/',
-            json.dumps({
-                "username": "user1",
-                "password": "password",
-                "first_name": "CS",
-                "last_name": "Kim",
-                "email": "kcs@mail.com",
-                "role": "participant",
-                "university": "university1"
-            }),
-            content_type='application/json'
-        )
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-
-        user_count = User.objects.count()
-        self.assertEqual(user_count, 1)
-
         response = self.client.post(        # Correct, first_name and last_name both exist
             '/api/v1/user/',
             json.dumps({
@@ -258,10 +240,28 @@ class PostUserTestCase(TestCase):
 
         user_count = User.objects.count()
         self.assertEqual(user_count, 3)
+
+
         participant_count = ParticipantProfile.objects.count()
         self.assertEqual(participant_count, 2)
         instructor_count = InstructorProfile.objects.count()
         self.assertEqual(instructor_count, 1)
+
+        participant = User.objects.get(username="participant")
+        self.assertEqual(participant.first_name, "Davin")
+        self.assertEqual(participant.last_name, "Byeon")
+        self.assertEqual(participant.email, "bdv111@snu.ac.kr")
+        participant_profile = participant.participant
+        self.assertEqual(participant_profile.university, "university2")
+        self.assertTrue(participant_profile.accepted)
+
+        instructor = User.objects.get(username="instructor")
+        self.assertEqual(instructor.first_name, "")
+        self.assertEqual(instructor.last_name, "")
+        self.assertEqual(instructor.email, "bdv111@snu.ac.kr")
+        instructor_profile = instructor.instructor
+        self.assertEqual(instructor_profile.company, "company")
+        self.assertIsNone(instructor_profile.year)
 
 
 class PutUserLoginTestCase(TestCase):

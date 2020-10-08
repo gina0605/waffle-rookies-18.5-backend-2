@@ -8,7 +8,7 @@ import datetime
 from user.models import InstructorProfile, ParticipantProfile
 from seminar.models import Seminar, UserSeminar
 
-class PostSeminar(TestCase):
+class PostSeminarTestCase(TestCase):
     client = Client()
 
     def setUp(self):
