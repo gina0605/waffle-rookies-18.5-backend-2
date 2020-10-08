@@ -402,6 +402,19 @@ class PutSeminarSeminaridTestCase(TestCase):
         seminar = Seminar.objects.get(id=self.seminar_id)
         self.assertEqual(seminar.name, "seminar1")
 
+    def test_put_seminar_seminarid_not_instructor(self):
+        response = self.client.put(         # Not instructor of the seminar
+            '/api/v1/seminar/{}/'.format(self.seminar_id),
+            json.dumps({
+                "name": "Seminar1",
+            }),
+            HTTP_AUTHORIZATION=self.partinst_token,
+            content_type='application/json',
+        )
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+        seminar = Seminar.objects.get(id=self.seminar_id)
+        self.assertEqual(seminar.name, "seminar1")
 
 
 
