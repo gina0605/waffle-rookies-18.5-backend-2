@@ -50,7 +50,7 @@ class SeminarViewSet(viewsets.GenericViewSet):
     def update(self, request, pk):
         user = request.user
         seminar = self.get_object()
-        if not UserSeminar.objects.filter(user=user, seminar=seminar, role='instructor').exists():
+        if not user.user_seminars.filter(seminar=seminar, role='instructor').exists():
             return Response(
                 {"error": "Only instructors of this seminar can change information"},
                 status=status.HTTP_403_FORBIDDEN
@@ -58,7 +58,7 @@ class SeminarViewSet(viewsets.GenericViewSet):
 
         serializer = self.get_serializer(seminar, data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
-        participants = UserSeminar.objects.filter(seminar=seminar, role='participant').count()
+        participants = seminar.user_seminars.filter(role='participant').count()
         if 'capacity' in request.data and serializer.validated_data.get('capacity') < participants:
             return Response(
                 {"error": "Cannot set capacity less than the number of participants"},
@@ -134,8 +134,7 @@ class SeminarViewSet(viewsets.GenericViewSet):
                     {"error": "The user is not accepted"},
                     status=status.HTTP_403_FORBIDDEN
                 )
-            participants = UserSeminar.objects.filter(
-                seminar=seminar,
+            participants = seminar.user_seminars.filter(
                 role='participant',
                 dropped_at=None,
             ).count()
@@ -145,7 +144,7 @@ class SeminarViewSet(viewsets.GenericViewSet):
                     status=status.HTTP_400_BAD_REQUEST
                 )
         elif role == 'instructor':
-            if UserSeminar.objects.filter(user=user, role='instructor').exists():
+            if user.user_seminars.filter(user=user, role='instructor').exists():
                 return Response(
                     {"error": "The user is an instructor of another seminar"},
                     status=status.HTTP_400_BAD_REQUEST
@@ -160,7 +159,7 @@ class SeminarViewSet(viewsets.GenericViewSet):
 
     def drop_seminar(self, user, seminar):
         try:
-            userseminar = UserSeminar.objects.get(user=user, seminar=seminar)
+            userseminar = user.user_seminars.get(seminar=seminar)
         except ObjectDoesNotExist:
             return Response()
         if userseminar.dropped_at is not None:

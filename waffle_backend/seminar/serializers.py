@@ -25,11 +25,11 @@ class SeminarSerializer(serializers.ModelSerializer):
         )
 
     def get_instructors(self, seminar):
-        queryset = UserSeminar.objects.filter(seminar=seminar, role='instructor')
+        queryset = seminar.user_seminars.filter(role='instructor')
         return SeminarInstructorSerializer(queryset, many=True, context=self.context).data
 
     def get_participants(self, seminar):
-        queryset = UserSeminar.objects.filter(seminar=seminar, role='participant')
+        queryset = seminar.user_seminars.filter(role='participant')
         return SeminarParticipantSerializer(queryset, many=True, context=self.context).data
 
 
