@@ -738,3 +738,161 @@ class GetSeminarSeminaridTestCase(TestCase):
 
         self.assertEqual(len(data["participants"]), 0)
 
+class GetSeminar(TestCase):
+    client = Client()
+
+    def setUp(self):
+        part1 = User.objects.create_user(
+            username="part1",
+            password="password",
+            email="part1@mail.com",
+        )
+        self.part1_id = part1.id
+        ParticipantProfile.objects.create(user=part1)
+
+        part2 = User.objects.create_user(
+            username="part2",
+            password="password",
+            email="part2@mail.com",
+        )
+        self.part2_id = part2.id
+        ParticipantProfile.objects.create(user=part2)
+
+        inst1 = User.objects.create_user(
+            username="inst1",
+            password="password",
+            email="inst1@mail.com",
+        )
+        self.inst1_id = inst1.id
+        InstructorProfile.objects.create(user=inst1)
+
+        inst2 = User.objects.create_user(
+            username="inst2",
+            password="password",
+            email="inst2@mail.com",
+        )
+        self.inst2_id = inst2.id
+        InstructorProfile.objects.create(user=inst2)
+
+        inst3 = User.objects.create_user(
+            username="inst3",
+            password="password",
+            email="inst3@mail.com",
+        )
+        self.inst3_id = inst3.id
+        InstructorProfile.objects.create(user=inst3)
+
+        seminar1 = Seminar.objects.create(
+            name="seminar1",
+            capacity=10,
+            count=5,
+            time=timezone.localtime()
+        )
+        self.seminar1_id = seminar1.id
+        UserSeminar.objects.create(
+            user=part1,
+            seminar=seminar1,
+            role="participant",
+        )
+        UserSeminar.objects.create(
+            user=part2,
+            seminar=seminar1,
+            role="participant",
+            dropped_at=timezone.localtime(),
+        )
+        UserSeminar.objects.create(
+            user=inst1,
+            seminar=seminar1,
+            role="instructor",
+        )
+        UserSeminar.objects.create(
+            user=inst2,
+            seminar=seminar1,
+            role="instructor",
+        )
+
+        seminar2 = Seminar.objects.create(
+            name="seminar2",
+            capacity=10,
+            count=5,
+            time=timezone.localtime()
+        )
+        self.seminar2_id = seminar2.id
+        UserSeminar.objects.create(
+            user=inst3,
+            seminar=seminar2,
+            role="instructor",
+        )
+
+    def test_get_seminar(self):
+        response = self.client.get(         # Correct
+            '/api/v1/seminar/',
+            content_type='application/json',
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        data = response.json()
+        self.assertEqual(len(data), 2)
+
+        seminar = data[0]
+        self.assertEqual(seminar["name"], "seminar2")
+        self.assertEqual(seminar["participant_count"], 0)
+        instructors = seminar["instructors"]
+        self.assertEqual(len(instructors), 1)
+
+        inst3 = instructors[0]
+        self.assertEqual(inst3["id"], self.inst3_id)
+        self.assertEqual(inst3["username"], "inst3")
+        self.assertEqual(inst3["email"], "inst3@mail.com")
+        self.assertEqual(inst3["first_name"], "")
+        self.assertEqual(inst3["last_name"], "")
+        self.assertIn("joined_at", inst3)
+
+        seminar = data[1]
+        self.assertEqual(seminar["name"], "seminar1")
+        self.assertEqual(seminar["participant_count"], 1)
+        instructors = seminar["instructors"]
+        self.assertEqual(len(instructors), 2)
+
+        inst1 = instructors[0]
+        self.assertEqual(inst1["id"], self.inst1_id)
+        self.assertEqual(inst1["username"], "inst1")
+        self.assertEqual(inst1["email"], "inst1@mail.com")
+        self.assertEqual(inst1["first_name"], "")
+        self.assertEqual(inst1["last_name"], "")
+        self.assertIn("joined_at", inst1)
+
+        inst2 = instructors[1]
+        self.assertEqual(inst2["id"], self.inst2_id)
+        self.assertEqual(inst2["username"], "inst2")
+        self.assertEqual(inst2["email"], "inst2@mail.com")
+        self.assertEqual(inst2["first_name"], "")
+        self.assertEqual(inst2["last_name"], "")
+        self.assertIn("joined_at", inst2)
+
+    def test_get_seminar_name(self):
+        response = self.client.get(         # Correct
+            '/api/v1/seminar/?name=2',
+            content_type='application/json',
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        data = response.json()
+        self.assertEqual(len(data), 1)
+
+        seminar = data[0]
+        self.assertEqual(seminar["name"], "seminar2")
+
+    def test_get_seminar_earliest(self):
+        response = self.client.get(         # Correct
+            '/api/v1/seminar/?order=earliest&sth=dd',
+            content_type='application/json',
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        data = response.json()
+        self.assertEqual(len(data), 2)
+
+        self.assertEqual(data[0]["name"], "seminar1")
+        self.assertEqual(data[1]["name"], "seminar2")
+
