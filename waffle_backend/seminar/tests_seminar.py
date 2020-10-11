@@ -1251,14 +1251,23 @@ class DeleteSeminarSeminaridUserTestCase(TestCase):
     client = Client()
 
     def setUp(self):
-        part = User.objects.create_user(
-            username="part",
-            email="part@mail.com",
+        part1 = User.objects.create_user(
+            username="part1",
+            email="part1@mail.com",
             password="password"
         )
-        self.part_id = part.id
-        self.part_token = 'Token ' + Token.objects.create(user=part).key
-        ParticipantProfile.objects.create(user=part)
+        self.part1_id = part1.id
+        self.part1_token = 'Token ' + Token.objects.create(user=part1).key
+        ParticipantProfile.objects.create(user=part1)
+
+        part2 = User.objects.create_user(
+            username="part2",
+            email="part2@mail.com",
+            password="password"
+        )
+        self.part2_id = part2.id
+        self.part2_token = 'Token ' + Token.objects.create(user=part2).key
+        ParticipantProfile.objects.create(user=part2)
 
         partinst = User.objects.create_user(
             username="partinst",
@@ -1287,10 +1296,15 @@ class DeleteSeminarSeminaridUserTestCase(TestCase):
         )
         self.seminar1_id = seminar1.id
         UserSeminar.objects.create(
-            user=part,
+            user=part1,
             seminar=seminar1,
             role="participant",
             dropped_at=timezone.localtime()
+        )
+        UserSeminar.objects.create(
+            user=part2,
+            seminar=seminar1,
+            role="participant",
         )
         UserSeminar.objects.create(
             user=partinst,
@@ -1315,6 +1329,11 @@ class DeleteSeminarSeminaridUserTestCase(TestCase):
             seminar=seminar2,
             role="instructor",
         )
+        UserSeminar.objects.create(
+            user=part2,
+            seminar=seminar2,
+            role="participant",
+        )
 
     def test_delete_seminar_seminarid_user_unauthorized(self):
         response = self.client.delete(         # unauthorized
@@ -1323,9 +1342,6 @@ class DeleteSeminarSeminaridUserTestCase(TestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
-        self.assertEqual(UserSeminar.objects.count(), 4)
-        self.assertEqual(UserSeminar.objects.filter(dropped_at=None).count(), 3)
-
     def test_delete_seminar_seminarid_user_wrong_seminarid(self):
         response = self.client.delete(         # Wrong seminarid
             '/api/v1/seminar/99/user/',
@@ -1333,9 +1349,6 @@ class DeleteSeminarSeminaridUserTestCase(TestCase):
             HTTP_AUTHORIZATION=self.partinst_token,
         )
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
-
-        self.assertEqual(UserSeminar.objects.count(), 4)
-        self.assertEqual(UserSeminar.objects.filter(dropped_at=None).count(), 3)
 
     def test_delete_seminar_seminarid_user_instructor(self):
         response = self.client.delete(         # Instructor
@@ -1352,14 +1365,14 @@ class DeleteSeminarSeminaridUserTestCase(TestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
-        self.assertEqual(UserSeminar.objects.count(), 4)
-        self.assertEqual(UserSeminar.objects.filter(dropped_at=None).count(), 3)
+        self.assertEqual(UserSeminar.objects.filter(role="instructor", dropped_at=None).count(), 2)
+        self.assertEqual(UserSeminar.objects.count(), 6)
 
     def test_delete_seminar_seminarid_user_not_attending(self):
-        response = self.client.delete(         # Not active
+        response = self.client.delete(         # Already dropped
             '/api/v1/seminar/{}/user/'.format(self.seminar1_id),
             content_type='application/json',
-            HTTP_AUTHORIZATION=self.part_token,
+            HTTP_AUTHORIZATION=self.part1_token,
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
@@ -1374,8 +1387,88 @@ class DeleteSeminarSeminaridUserTestCase(TestCase):
 
         self.assertEqual(response.content, b'')
 
-        self.assertEqual(UserSeminar.objects.count(), 4)
-        self.assertEqual(UserSeminar.objects.filter(dropped_at=None).count(), 3)
+        self.assertIsNone(
+            UserSeminar.objects.get(user__username="inst", seminar__name="seminar2").dropped_at
+        )
+        self.assertEqual(UserSeminar.objects.count(), 6)
 
     def test_delete_seminar_seminarid_user(self):
-        pass
+        response = self.client.delete(         # Correct
+            '/api/v1/seminar/{}/user/'.format(self.seminar2_id),
+            content_type='application/json',
+            HTTP_AUTHORIZATION=self.partinst_token,
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        data = response.json()
+        self.assertEqual(data["id"], self.seminar2_id)
+        self.assertEqual(data["name"], "seminar2")
+        self.assertEqual(data["capacity"], 10)
+        self.assertEqual(data["count"], 5)
+        self.assertIn("time", data)
+        self.assertTrue(data["online"])
+        instructors = data["instructors"]
+        self.assertEqual(len(instructors), 1)
+        instructor = instructors[0]
+        self.assertEqual(instructor["id"], self.inst_id)
+        self.assertEqual(instructor["username"], "inst")
+        self.assertEqual(instructor["email"], "inst@mail.com")
+        self.assertEqual(instructor["first_name"], "")
+        self.assertEqual(instructor["last_name"], "")
+        self.assertIn("joined_at", instructor)
+        participants = data["participants"]
+        self.assertEqual(len(participants), 2)
+        participant1 = participants[0]
+        self.assertEqual(participant1["id"], self.partinst_id)
+        self.assertEqual(participant1["username"], "partinst")
+        self.assertEqual(participant1["email"], "partinst@mail.com")
+        self.assertEqual(participant1["first_name"], "")
+        self.assertEqual(participant1["last_name"], "")
+        self.assertIn("joined_at", participant1)
+        self.assertFalse(participant1["is_active"])
+        self.assertIsNotNone(participant1["dropped_at"])
+        participant2 = participants[1]
+        self.assertEqual(participant2["id"], self.part2_id)
+        self.assertEqual(participant2["username"], "part2")
+        self.assertEqual(participant2["email"], "part2@mail.com")
+        self.assertEqual(participant2["first_name"], "")
+        self.assertEqual(participant2["last_name"], "")
+        self.assertIn("joined_at", participant2)
+        self.assertTrue(participant2["is_active"])
+        self.assertIsNone(participant2["dropped_at"])
+
+        response = self.client.delete(         # Correct
+            '/api/v1/seminar/{}/user/'.format(self.seminar1_id),
+            content_type='application/json',
+            HTTP_AUTHORIZATION=self.part2_token,
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        data = response.json()
+        self.assertEqual(data["id"], self.seminar1_id)
+        instructors = data["instructors"]
+        self.assertEqual(len(instructors), 1)
+        instructor = instructors[0]
+        self.assertEqual(instructor["id"], self.partinst_id)
+        participants = data["participants"]
+        self.assertEqual(len(participants), 2)
+        participant1 = participants[0]
+        self.assertEqual(participant1["id"], self.part1_id)
+        self.assertFalse(participant1["is_active"])
+        self.assertIsNotNone(participant1["dropped_at"])
+        participant2 = participants[1]
+        self.assertEqual(participant2["id"], self.part2_id)
+        self.assertFalse(participant2["is_active"])
+        self.assertIsNotNone(participant2["dropped_at"])
+
+        self.assertIsNotNone(
+            UserSeminar.objects.get(user__username="part2", seminar__name="seminar1").dropped_at
+        )
+        self.assertIsNotNone(
+            UserSeminar.objects.get(user__username="partinst", seminar__name="seminar2").dropped_at
+        )
+        self.assertIsNone(
+            UserSeminar.objects.get(user__username="part2", seminar__name="seminar2").dropped_at
+        )
+        self.assertEqual(UserSeminar.objects.count(), 6)
+        self.assertEqual(UserSeminar.objects.filter(dropped_at=None).count(), 3)
