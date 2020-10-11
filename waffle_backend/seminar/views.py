@@ -163,10 +163,7 @@ class SeminarViewSet(viewsets.GenericViewSet):
         except ObjectDoesNotExist:
             return Response()
         if userseminar.dropped_at is not None:
-            return Response(
-                {"error": "The user have already dropped out from the seminar"},
-                status=status.HTTP_403_FORBIDDEN
-            )
+            return Response()
         if userseminar.role == 'instructor':
             return Response(
                 {"error": "Instructors cannot drop seminar"},

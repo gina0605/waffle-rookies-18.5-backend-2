@@ -1256,6 +1256,7 @@ class DeleteSeminarSeminaridUserTestCase(TestCase):
             email="part@mail.com",
             password="password"
         )
+        self.part_id = part.id
         self.part_token = 'Token ' + Token.objects.create(user=part).key
         ParticipantProfile.objects.create(user=part)
 
@@ -1264,6 +1265,7 @@ class DeleteSeminarSeminaridUserTestCase(TestCase):
             email="partinst@mail.com",
             password="password"
         )
+        self.partinst_id = partinst.id
         self.partinst_token = 'Token ' + Token.objects.create(user=partinst).key
         ParticipantProfile.objects.create(user=partinst)
         InstructorProfile.objects.create(user=partinst)
@@ -1273,6 +1275,7 @@ class DeleteSeminarSeminaridUserTestCase(TestCase):
             email="inst@mail.com",
             password="password"
         )
+        self.inst_id = inst.id
         self.inst_token = 'Token ' + Token.objects.create(user=inst).key
         InstructorProfile.objects.create(user=inst)
 
@@ -1353,7 +1356,26 @@ class DeleteSeminarSeminaridUserTestCase(TestCase):
         self.assertEqual(UserSeminar.objects.filter(dropped_at=None).count(), 3)
 
     def test_delete_seminar_seminarid_user_not_attending(self):
-        pass
+        response = self.client.delete(         # Not active
+            '/api/v1/seminar/{}/user/'.format(self.seminar1_id),
+            content_type='application/json',
+            HTTP_AUTHORIZATION=self.part_token,
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        self.assertEqual(response.content, b'')
+
+        response = self.client.delete(         # Not attending
+            '/api/v1/seminar/{}/user/'.format(self.seminar1_id),
+            content_type='application/json',
+            HTTP_AUTHORIZATION=self.inst_token,
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        self.assertEqual(response.content, b'')
+
+        self.assertEqual(UserSeminar.objects.count(), 4)
+        self.assertEqual(UserSeminar.objects.filter(dropped_at=None).count(), 3)
 
     def test_delete_seminar_seminarid_user(self):
         pass
