@@ -1101,7 +1101,31 @@ class PostSeminarSeminaridUserTestCase(TestCase):
         self.assertEqual(UserSeminar.objects.count(), 4)
 
     def test_post_seminar_seminarid_user_already_member_of_seminar(self):
-        pass
+        response = self.client.post(         # Already a member of the seminar
+            '/api/v1/seminar/{}/user/'.format(self.seminar2_id),
+            json.dumps({"role": "participant",}),
+            content_type='application/json',
+            HTTP_AUTHORIZATION=self.partinst2_token,
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+        response = self.client.post(         # Already a member of the seminar
+            '/api/v1/seminar/{}/user/'.format(self.seminar2_id),
+            json.dumps({"role": "instructor",}),
+            content_type='application/json',
+            HTTP_AUTHORIZATION=self.partinst2_token,
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+        response = self.client.post(         # Already a member of the seminar
+            '/api/v1/seminar/{}/user/'.format(self.seminar2_id),
+            json.dumps({"role": "instructor",}),
+            content_type='application/json',
+            HTTP_AUTHORIZATION=self.partinst3_token,
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+        self.assertEqual(UserSeminar.objects.count(), 4)
 
     def test_post_seminar_seminarid_user(self):
         pass
