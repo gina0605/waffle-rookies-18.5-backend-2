@@ -1245,3 +1245,25 @@ class PostSeminarSeminaridUserTestCase(TestCase):
             seminar__name="seminar2",
             role="instructor"
         ).exists())
+
+
+class DeleteSeminarSeminaridUserTestCase(TestCase):
+    client = Client()
+
+    def setUp(self):
+        pass
+
+    def test_delete_seminar_seminarid_user_unauthorized(self):
+        pass
+
+    def test_delete_seminar_seminarid_user_wrong_seminarid(self):
+        pass
+
+    def test_delete_seminar_seminarid_user_instructor(self):
+        pass
+
+    def test_delete_seminar_seminarid_user_not_attending(self):
+        pass
+
+    def test_delete_seminar_seminarid_user(self):
+        pass
