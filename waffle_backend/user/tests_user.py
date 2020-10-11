@@ -464,6 +464,18 @@ class PutUserMeTestCase(TestCase):
         self.assertEqual(instructor_user.email, 'inst@mail.com')
         self.assertEqual(instructor_user.instructor.year, 1)
 
+    def test_put_user_other(self):
+        response = self.client.put(         # pk != me
+            '/api/v1/user/1/',
+            json.dumps({
+                "username": "Part",
+            }),
+            content_type='application/json',
+            HTTP_AUTHORIZATION=self.participant_token
+        )
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertTrue(User.objects.filter(username="part").exists())
+
     def test_put_user_me_participant(self):
         response = self.client.put(         # Correct
             '/api/v1/user/me/',
