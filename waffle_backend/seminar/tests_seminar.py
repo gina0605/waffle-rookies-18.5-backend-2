@@ -953,7 +953,7 @@ class PostSeminarSeminaridUserTestCase(TestCase):
         ParticipantProfile.objects.create(user=part3)
 
         inst = User.objects.create_user(
-            username="isnt",
+            username="inst",
             password="password",
             email="inst@mail.com",
         )
@@ -1129,7 +1129,7 @@ class PostSeminarSeminaridUserTestCase(TestCase):
         self.assertEqual(UserSeminar.objects.count(), 4)
 
     def test_post_seminar_seminarid_user(self):
-        response = self.client.post(         # Already a member of the seminar
+        response = self.client.post(         # Correct
             '/api/v1/seminar/{}/user/'.format(self.seminar2_id),
             json.dumps({"role": "participant",}),
             content_type='application/json',
@@ -1156,4 +1156,92 @@ class PostSeminarSeminaridUserTestCase(TestCase):
             user__username="partinst1",
             seminar__name="seminar2",
             role="participant"
+        ).exists())
+
+        response = self.client.post(         # Correct
+            '/api/v1/seminar/{}/user/'.format(self.seminar2_id),
+            json.dumps({"role": "instructor",}),
+            content_type='application/json',
+            HTTP_AUTHORIZATION=self.partinst4_token,
+        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        data = response.json()
+        self.assertEqual(data["id"], self.seminar2_id)
+        self.assertEqual(data["name"], "seminar2")
+        instructors = data["instructors"]
+        self.assertEqual(len(instructors), 2)
+        instructor1 = instructors[0]
+        self.assertEqual(instructor1["username"], "partinst2")
+        instructor2 = instructors[1]
+        self.assertEqual(instructor2["username"], "partinst4")
+        participants = data["participants"]
+        self.assertEqual(len(participants), 2)
+
+        self.assertEqual(UserSeminar.objects.count(), 6)
+        self.assertTrue(UserSeminar.objects.filter(
+            user__username="partinst4",
+            seminar__name="seminar2",
+            role="instructor"
+        ).exists())
+
+        response = self.client.post(         # Correct
+            '/api/v1/seminar/{}/user/'.format(self.seminar2_id),
+            json.dumps({"role": "participant",}),
+            content_type='application/json',
+            HTTP_AUTHORIZATION=self.part3_token,
+        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        data = response.json()
+        self.assertEqual(data["id"], self.seminar2_id)
+        self.assertEqual(data["name"], "seminar2")
+        instructors = data["instructors"]
+        self.assertEqual(len(instructors), 2)
+        participants = data["participants"]
+        self.assertEqual(len(participants), 3)
+        participant1 = participants[0]
+        self.assertEqual(participant1["username"], "partinst3")
+        self.assertFalse(participant1["is_active"])
+        participant2 = participants[1]
+        self.assertEqual(participant2["username"], "partinst1")
+        self.assertTrue(participant2["is_active"])
+        participant3 = participants[2]
+        self.assertEqual(participant3["username"], "part3")
+        self.assertTrue(participant2["is_active"])
+
+        self.assertEqual(UserSeminar.objects.count(), 7)
+        self.assertTrue(UserSeminar.objects.filter(
+            user__username="part3",
+            seminar__name="seminar2",
+            role="participant"
+        ).exists())
+
+        response = self.client.post(         # Correct
+            '/api/v1/seminar/{}/user/'.format(self.seminar2_id),
+            json.dumps({"role": "instructor",}),
+            content_type='application/json',
+            HTTP_AUTHORIZATION=self.inst_token,
+        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        data = response.json()
+        self.assertEqual(data["id"], self.seminar2_id)
+        self.assertEqual(data["name"], "seminar2")
+        instructors = data["instructors"]
+        self.assertEqual(len(instructors), 3)
+        instructor1 = instructors[0]
+        self.assertEqual(instructor1["username"], "partinst2")
+        instructor2 = instructors[1]
+        self.assertEqual(instructor2["username"], "partinst4")
+        instructor3 = instructors[2]
+        self.assertEqual(instructor3["username"], "inst")
+        participants = data["participants"]
+        self.assertEqual(len(participants), 3)
+
+        self.assertEqual(UserSeminar.objects.count(), 8)
+        self.assertTrue(UserSeminar.objects.filter(
+            user__username="inst",
+            seminar__name="seminar2",
+            role="instructor"
         ).exists())
