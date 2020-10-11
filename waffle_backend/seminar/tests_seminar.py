@@ -738,7 +738,7 @@ class GetSeminarSeminaridTestCase(TestCase):
 
         self.assertEqual(len(data["participants"]), 0)
 
-class GetSeminar(TestCase):
+class GetSeminarTestCase(TestCase):
     client = Client()
 
     def setUp(self):
@@ -896,3 +896,90 @@ class GetSeminar(TestCase):
         self.assertEqual(data[0]["name"], "seminar1")
         self.assertEqual(data[1]["name"], "seminar2")
 
+class PostSeminarSeminaridUserTestCase(TestCase):
+    client = Client()
+
+    def setUp(self):
+        partinst1 = User.objects.create_user(
+            name="partinst1",
+            password="password",
+            email="partinst1@mail.com",
+        )
+        ParticipantProfile.objects.create(user=partinst1)
+        InstructorProfile.objects.create(user=partinst1)
+
+        part1 = User.objects.create_user(
+            name="part1",
+            password="password",
+            email="part1@mail.com",
+        )
+        ParticipantProfile.objects.create(user=part1)
+
+        partinst2 = User.objects.create_user(
+            name="partinst2",
+            password="password",
+            email="partinst2@mail.com",
+        )
+        ParticipantProfile.objects.create(user=partinst2)
+        InstructorProfile.objects.create(user=partinst2)
+
+        partinst3 = User.objects.create_user(
+            name="partinst3",
+            password="password",
+            email="partinst3@mail.com",
+        )
+        ParticipantProfile.objects.create(user=partinst3, accepted=False)
+        InstructorProfile.objects.create(user=partinst3)
+
+        part2 = User.objects.create_user(
+            name="part2",
+            password="password",
+            email="part2@mail.com",
+        )
+        ParticipantProfile.objects.create(user=part2, accepted=False)
+
+        part3 = User.objects.create_user(
+            name="part3",
+            password="password",
+            email="part3@mail.com",
+        )
+        ParticipantProfile.objects.create(user=part3)
+
+        inst = User.objects.create_user(
+            name="isnt",
+            password="password",
+            email="inst@mail.com",
+        )
+        InstructorProfile.objects.create(user=inst)
+
+        partinst4 = User.objects.create_user(
+            name="partinst4",
+            password="password",
+            email="partinst4@mail.com",
+        )
+        ParticipantProfile.objects.create(user=partinst4)
+        InstructorProfile.objects.create(user=partinst4)
+
+    def test_post_seminar_seminarid_unauthorized(self):
+        pass
+
+    def test_post_seminar_seminarid_wrong_seminarid(self):
+        pass
+
+    def test_post_seminar_semianrid_wrong_role(self):
+        pass
+
+    def test_post_seminar_semianrid_not_accepted(self):
+        pass
+
+    def test_post_seminar_semianrid_capacity_full(self):
+        pass
+
+    def test_post_seminar_semianrid_instructing_another_seminar(self):
+        pass
+
+    def test_post_seminar_seminarid_already_member_of_seminar(self):
+        pass
+
+    def test_post_seminar_semianrid(self):
+        pass
