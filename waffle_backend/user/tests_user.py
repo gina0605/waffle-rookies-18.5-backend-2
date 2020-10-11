@@ -556,6 +556,32 @@ class PutUserMeTestCase(TestCase):
         self.assertEqual(instructor_user.instructor.year, 0)
 
 
+class PostUserLogoutTestCase(TestCase):
+    client = Client()
+
+    def setUp(self):
+        user = User.objects.create_user(
+            username="user",
+            password="password",
+            email="user@mail.com",
+        )
+        self.user_token = 'Token ' + Token.objects.create(user=user).key
+
+    def test_post_user_unauthorized(self):
+        response = self.client.post(         # Unauthorized
+            '/api/v1/user/logout/',
+            content_type='application/json'
+        )
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_post_user(self):
+        response = self.client.post(         # Correct
+            '/api/v1/user/logout/',
+            content_type='application/json',
+            HTTP_AUTHORIZATION=self.user_token
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
 class GetUserPkTestCase(TestCase):
     client = Client()
 
