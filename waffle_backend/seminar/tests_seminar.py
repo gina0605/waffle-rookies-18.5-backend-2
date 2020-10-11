@@ -932,7 +932,7 @@ class PostSeminarSeminaridUserTestCase(TestCase):
             email="partinst3@mail.com",
         )
         self.partinst3_token = 'Token ' + Token.objects.create(user=partinst3).key
-        ParticipantProfile.objects.create(user=partinst3, accepted=False)
+        ParticipantProfile.objects.create(user=partinst3)
         InstructorProfile.objects.create(user=partinst3)
 
         partinst4 = User.objects.create_user(
@@ -1002,6 +1002,7 @@ class PostSeminarSeminaridUserTestCase(TestCase):
             user=partinst3,
             seminar=seminar2,
             role="participant",
+            dropped_at=timezone.localtime(),
         )
 
     def test_post_seminar_seminarid_unauthorized(self):
@@ -1128,4 +1129,31 @@ class PostSeminarSeminaridUserTestCase(TestCase):
         self.assertEqual(UserSeminar.objects.count(), 4)
 
     def test_post_seminar_seminarid_user(self):
-        pass
+        response = self.client.post(         # Already a member of the seminar
+            '/api/v1/seminar/{}/user/'.format(self.seminar2_id),
+            json.dumps({"role": "participant",}),
+            content_type='application/json',
+            HTTP_AUTHORIZATION=self.partinst1_token,
+        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        data = response.json()
+        self.assertEqual(data["id"], self.seminar2_id)
+        self.assertEqual(data["name"], "seminar2")
+        instructors = data["instructors"]
+        self.assertEqual(len(instructors), 1)
+        participants = data["participants"]
+        self.assertEqual(len(participants), 2)
+        participant1 = participants[0]
+        self.assertEqual(participant1["username"], "partinst3")
+        self.assertFalse(participant1["is_active"])
+        participant2 = participants[1]
+        self.assertEqual(participant2["username"], "partinst1")
+        self.assertTrue(participant2["is_active"])
+
+        self.assertEqual(UserSeminar.objects.count(), 5)
+        self.assertTrue(UserSeminar.objects.filter(
+            user__username="partinst1",
+            seminar__name="seminar2",
+            role="participant"
+        ).exists())
