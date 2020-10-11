@@ -7,6 +7,7 @@
 - `POST /api/v1/user/`
   * Participant의 경우, `accepted`가 입력으로 주어지지 않을 시 default로 True로 설정하도록 바꿈. 
   * 새로운 instructor를 만들 때 런타임 에러가 남. 코딩 실수를 고침.
+  * username이 겹치는 경우를 처리하는 코드가 있었는데, DRF-serializer에서 알아서 처리해주기 때문에 작동하지 않고 있어서 삭제함. 직접 입력한 멘트와 DRF에서 띄워주는 멘트가 같아서 알아차리지 못하고 있었음.
 - `POST /api/v1/user/participant/`
   * `accepted`가 입력으로 주어지지 않을 시 default로 True로 설정하도록 바꿈.
 - `DELETE /api/v1/seminar/{seminar_id}/user/`
