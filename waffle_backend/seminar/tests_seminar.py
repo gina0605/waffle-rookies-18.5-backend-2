@@ -1324,10 +1324,33 @@ class DeleteSeminarSeminaridUserTestCase(TestCase):
         self.assertEqual(UserSeminar.objects.filter(dropped_at=None).count(), 3)
 
     def test_delete_seminar_seminarid_user_wrong_seminarid(self):
-        pass
+        response = self.client.delete(         # Wrong seminarid
+            '/api/v1/seminar/99/user/',
+            content_type='application/json',
+            HTTP_AUTHORIZATION=self.partinst_token,
+        )
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+        self.assertEqual(UserSeminar.objects.count(), 4)
+        self.assertEqual(UserSeminar.objects.filter(dropped_at=None).count(), 3)
 
     def test_delete_seminar_seminarid_user_instructor(self):
-        pass
+        response = self.client.delete(         # Instructor
+            '/api/v1/seminar/{}/user/'.format(self.seminar1_id),
+            content_type='application/json',
+            HTTP_AUTHORIZATION=self.partinst_token,
+        )
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+        response = self.client.delete(         # Instructor
+            '/api/v1/seminar/{}/user/'.format(self.seminar2_id),
+            content_type='application/json',
+            HTTP_AUTHORIZATION=self.inst_token,
+        )
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+        self.assertEqual(UserSeminar.objects.count(), 4)
+        self.assertEqual(UserSeminar.objects.filter(dropped_at=None).count(), 3)
 
     def test_delete_seminar_seminarid_user_not_attending(self):
         pass
