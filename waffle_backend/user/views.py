@@ -29,13 +29,7 @@ class UserViewSet(viewsets.GenericViewSet):
     def create(self, request):
         serializer = self.get_serializer(data=request.data, status='create')
         serializer.is_valid(raise_exception=True)
-        try:
-            user = serializer.save()
-        except IntegrityError:
-            return Response(
-                {"error": "A user with that username already exists."},
-                status=status.HTTP_400_BAD_REQUEST
-            )
+        user = serializer.save()
 
         login(request, user)
 

@@ -738,6 +738,7 @@ class GetSeminarSeminaridTestCase(TestCase):
 
         self.assertEqual(len(data["participants"]), 0)
 
+
 class GetSeminarTestCase(TestCase):
     client = Client()
 
@@ -895,6 +896,7 @@ class GetSeminarTestCase(TestCase):
 
         self.assertEqual(data[0]["name"], "seminar1")
         self.assertEqual(data[1]["name"], "seminar2")
+
 
 class PostSeminarSeminaridUserTestCase(TestCase):
     client = Client()
