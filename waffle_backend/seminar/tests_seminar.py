@@ -1025,20 +1025,59 @@ class PostSeminarSeminaridUserTestCase(TestCase):
 
         self.assertEqual(UserSeminar.objects.count(), 4)
 
-    def test_post_seminar_semianrid_wrong_role(self):
+    def test_post_seminar_seminarid_wrong_role(self):
+        response = self.client.post(         # Wrong role
+            '/api/v1/seminar/99/user/',
+            json.dumps({"role": "p",}),
+            content_type='application/json',
+            HTTP_AUTHORIZATION=self.part3_token,
+        )
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+        response = self.client.post(         # role blank
+            '/api/v1/seminar/99/user/',
+            json.dumps({"role": "",}),
+            content_type='application/json',
+            HTTP_AUTHORIZATION=self.part3_token,
+        )
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+        response = self.client.post(         # No role
+            '/api/v1/seminar/99/user/',
+            content_type='application/json',
+            HTTP_AUTHORIZATION=self.part3_token,
+        )
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+        response = self.client.post(         # No instructor profile
+            '/api/v1/seminar/99/user/',
+            json.dumps({"role": "instructor",}),
+            content_type='application/json',
+            HTTP_AUTHORIZATION=self.part3_token,
+        )
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+        response = self.client.post(         # No participant profile
+            '/api/v1/seminar/99/user/',
+            json.dumps({"role": "participant",}),
+            content_type='application/json',
+            HTTP_AUTHORIZATION=self.inst_token,
+        )
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+        self.assertEqual(UserSeminar.objects.count(), 4)
+
+    def test_post_seminar_seminarid_not_accepted(self):
         pass
 
-    def test_post_seminar_semianrid_not_accepted(self):
+    def test_post_seminar_seminarid_capacity_full(self):
         pass
 
-    def test_post_seminar_semianrid_capacity_full(self):
-        pass
-
-    def test_post_seminar_semianrid_instructing_another_seminar(self):
+    def test_post_seminar_seminarid_instructing_another_seminar(self):
         pass
 
     def test_post_seminar_seminarid_already_member_of_seminar(self):
         pass
 
-    def test_post_seminar_semianrid(self):
+    def test_post_seminar_seminarid(self):
         pass
