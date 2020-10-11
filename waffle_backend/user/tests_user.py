@@ -272,26 +272,26 @@ class PutUserLoginTestCase(TestCase):
         )
 
     def test_put_user_login_incomplete_request(self):
-        response = self.client.post(        # No username
+        response = self.client.put(        # No username
             '/api/v1/user/login/',
             json.dumps({
                 "password": "password",
             }),
             content_type='application/json'
         )
-        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
-        response = self.client.post(        # No password
+        response = self.client.put(        # No password
             '/api/v1/user/login/',
             json.dumps({
                 "username": "user1",
             }),
             content_type='application/json'
         )
-        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_put_user_login_wrong_request(self):
-        response = self.client.post(        # Wrong username
+        response = self.client.put(        # Wrong username
             '/api/v1/user/login/',
             json.dumps({
                 "username": "username_wrong",
@@ -299,9 +299,9 @@ class PutUserLoginTestCase(TestCase):
             }),
             content_type='application/json'
         )
-        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
-        response = self.client.post(        # Wrong password
+        response = self.client.put(        # Wrong password
             '/api/v1/user/login/',
             json.dumps({
                 "username": "user1",
@@ -309,7 +309,7 @@ class PutUserLoginTestCase(TestCase):
             }),
             content_type='application/json'
         )
-        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_put_user_login(self):
         response = self.client.put(        # Correct
