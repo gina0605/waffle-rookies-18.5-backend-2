@@ -116,7 +116,7 @@ class SeminarViewSet(viewsets.GenericViewSet):
             )
         try:
             userseminar = UserSeminar.objects.get(user=user, seminar=seminar)
-            if userseminar.dropped_at is None:
+            if userseminar.dropped_at is not None:
                 return Response(
                     {"error": "The user have already dropped out from the seminar"},
                     status=status.HTTP_400_BAD_REQUEST

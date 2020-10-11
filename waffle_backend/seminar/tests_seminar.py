@@ -1094,7 +1094,7 @@ class PostSeminarSeminaridUserTestCase(TestCase):
 
     def test_post_seminar_seminarid_user_instructing_another_seminar(self):
         response = self.client.post(         # Instructing another seminar
-            '/api/v1/seminar/{}/user/'.format(self.seminar1_id),
+            '/api/v1/seminar/{}/user/'.format(self.seminar2_id),
             json.dumps({"role": "instructor",}),
             content_type='application/json',
             HTTP_AUTHORIZATION=self.partinst1_token,
