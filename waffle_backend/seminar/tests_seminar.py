@@ -935,13 +935,14 @@ class PostSeminarSeminaridUserTestCase(TestCase):
         ParticipantProfile.objects.create(user=partinst3, accepted=False)
         InstructorProfile.objects.create(user=partinst3)
 
-        part2 = User.objects.create_user(
-            username="part2",
+        partinst4 = User.objects.create_user(
+            username="partinst4",
             password="password",
-            email="part2@mail.com",
+            email="partinst4@mail.com",
         )
-        self.part2_token = 'Token ' + Token.objects.create(user=part2).key
-        ParticipantProfile.objects.create(user=part2, accepted=False)
+        self.partinst4_token = 'Token ' + Token.objects.create(user=partinst4).key
+        ParticipantProfile.objects.create(user=partinst4, accepted=False)
+        InstructorProfile.objects.create(user=partinst4)
 
         part3 = User.objects.create_user(
             username="part3",
@@ -959,14 +960,13 @@ class PostSeminarSeminaridUserTestCase(TestCase):
         self.inst_token = 'Token ' + Token.objects.create(user=inst).key
         InstructorProfile.objects.create(user=inst)
 
-        partinst4 = User.objects.create_user(
-            username="partinst4",
+        part2 = User.objects.create_user(
+            username="part2",
             password="password",
-            email="partinst4@mail.com",
+            email="part2@mail.com",
         )
-        self.partinst4_token = 'Token ' + Token.objects.create(user=partinst4).key
-        ParticipantProfile.objects.create(user=partinst4)
-        InstructorProfile.objects.create(user=partinst4)
+        self.part2_token = 'Token ' + Token.objects.create(user=part2).key
+        ParticipantProfile.objects.create(user=part2)
 
         seminar1 = Seminar.objects.create(
             name="semianr1",
@@ -1072,7 +1072,7 @@ class PostSeminarSeminaridUserTestCase(TestCase):
             '/api/v1/seminar/{}/user/'.format(self.seminar2_id),
             json.dumps({"role": "participant",}),
             content_type='application/json',
-            HTTP_AUTHORIZATION=self.part2_token,
+            HTTP_AUTHORIZATION=self.partinst4_token,
         )
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
