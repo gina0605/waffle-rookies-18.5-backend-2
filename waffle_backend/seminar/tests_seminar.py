@@ -901,67 +901,117 @@ class PostSeminarSeminaridUserTestCase(TestCase):
 
     def setUp(self):
         partinst1 = User.objects.create_user(
-            name="partinst1",
+            username="partinst1",
             password="password",
             email="partinst1@mail.com",
         )
+        self.partinst1_token = Token.objects.create(user=partinst1)
         ParticipantProfile.objects.create(user=partinst1)
         InstructorProfile.objects.create(user=partinst1)
 
         part1 = User.objects.create_user(
-            name="part1",
+            username="part1",
             password="password",
             email="part1@mail.com",
         )
+        self.part1_token = Token.objects.create(user=part1)
         ParticipantProfile.objects.create(user=part1)
 
         partinst2 = User.objects.create_user(
-            name="partinst2",
+            username="partinst2",
             password="password",
             email="partinst2@mail.com",
         )
+        self.partinst2_token = Token.objects.create(user=partinst2)
         ParticipantProfile.objects.create(user=partinst2)
         InstructorProfile.objects.create(user=partinst2)
 
         partinst3 = User.objects.create_user(
-            name="partinst3",
+            username="partinst3",
             password="password",
             email="partinst3@mail.com",
         )
+        self.partinst3_token = Token.objects.create(user=partinst3)
         ParticipantProfile.objects.create(user=partinst3, accepted=False)
         InstructorProfile.objects.create(user=partinst3)
 
         part2 = User.objects.create_user(
-            name="part2",
+            username="part2",
             password="password",
             email="part2@mail.com",
         )
+        self.part2_token = Token.objects.create(user=part2)
         ParticipantProfile.objects.create(user=part2, accepted=False)
 
         part3 = User.objects.create_user(
-            name="part3",
+            username="part3",
             password="password",
             email="part3@mail.com",
         )
+        self.part3_token = Token.objects.create(user=part3)
         ParticipantProfile.objects.create(user=part3)
 
         inst = User.objects.create_user(
-            name="isnt",
+            username="isnt",
             password="password",
             email="inst@mail.com",
         )
+        self.inst_token = Token.objects.create(user=inst)
         InstructorProfile.objects.create(user=inst)
 
         partinst4 = User.objects.create_user(
-            name="partinst4",
+            username="partinst4",
             password="password",
             email="partinst4@mail.com",
         )
+        self.partinst4_token = Token.objects.create(user=partinst4)
         ParticipantProfile.objects.create(user=partinst4)
         InstructorProfile.objects.create(user=partinst4)
 
+        seminar1 = Seminar.objects.create(
+            name="semianr1",
+            capacity=1,
+            count=5,
+            time=timezone.localtime(),
+        )
+        self.seminar1_id = seminar1.id
+        UserSeminar.objects.create(
+            user=partinst1,
+            seminar=seminar1,
+            role="instructor",
+        )
+        UserSeminar.objects.create(
+            user=part1,
+            seminar=seminar1,
+            role="participant",
+        )
+
+        seminar2 = Seminar.objects.create(
+            name="seminar2",
+            capacity=2,
+            count=5,
+            time=timezone.localtime(),
+        )
+        self.seminar2_id = seminar2.id
+        UserSeminar.objects.create(
+            user=partinst2,
+            seminar=seminar2,
+            role="instructor",
+        )
+        UserSeminar.objects.create(
+            user=partinst3,
+            seminar=seminar2,
+            role="participant",
+        )
+
     def test_post_seminar_seminarid_unauthorized(self):
-        pass
+        response = self.client.put(         # unauthorized
+            '/api/v1/seminar/{}/user/'.format(self.seminar2_id),
+            content_type='application/json',
+        )
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+        self.assertEqual(UserSeminar.objects.filter(seminar__name="seminar2").count(), 2)
 
     def test_post_seminar_seminarid_wrong_seminarid(self):
         pass
