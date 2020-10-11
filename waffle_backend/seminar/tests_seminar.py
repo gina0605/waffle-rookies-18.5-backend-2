@@ -905,7 +905,7 @@ class PostSeminarSeminaridUserTestCase(TestCase):
             password="password",
             email="partinst1@mail.com",
         )
-        self.partinst1_token = Token.objects.create(user=partinst1)
+        self.partinst1_token = 'Token ' + Token.objects.create(user=partinst1).key
         ParticipantProfile.objects.create(user=partinst1)
         InstructorProfile.objects.create(user=partinst1)
 
@@ -914,7 +914,7 @@ class PostSeminarSeminaridUserTestCase(TestCase):
             password="password",
             email="part1@mail.com",
         )
-        self.part1_token = Token.objects.create(user=part1)
+        self.part1_token = 'Token ' + Token.objects.create(user=part1).key
         ParticipantProfile.objects.create(user=part1)
 
         partinst2 = User.objects.create_user(
@@ -922,7 +922,7 @@ class PostSeminarSeminaridUserTestCase(TestCase):
             password="password",
             email="partinst2@mail.com",
         )
-        self.partinst2_token = Token.objects.create(user=partinst2)
+        self.partinst2_token = 'Token ' + Token.objects.create(user=partinst2).key
         ParticipantProfile.objects.create(user=partinst2)
         InstructorProfile.objects.create(user=partinst2)
 
@@ -931,7 +931,7 @@ class PostSeminarSeminaridUserTestCase(TestCase):
             password="password",
             email="partinst3@mail.com",
         )
-        self.partinst3_token = Token.objects.create(user=partinst3)
+        self.partinst3_token = 'Token ' + Token.objects.create(user=partinst3).key
         ParticipantProfile.objects.create(user=partinst3, accepted=False)
         InstructorProfile.objects.create(user=partinst3)
 
@@ -940,7 +940,7 @@ class PostSeminarSeminaridUserTestCase(TestCase):
             password="password",
             email="part2@mail.com",
         )
-        self.part2_token = Token.objects.create(user=part2)
+        self.part2_token = 'Token ' + Token.objects.create(user=part2).key
         ParticipantProfile.objects.create(user=part2, accepted=False)
 
         part3 = User.objects.create_user(
@@ -948,7 +948,7 @@ class PostSeminarSeminaridUserTestCase(TestCase):
             password="password",
             email="part3@mail.com",
         )
-        self.part3_token = Token.objects.create(user=part3)
+        self.part3_token = 'Token ' + Token.objects.create(user=part3).key
         ParticipantProfile.objects.create(user=part3)
 
         inst = User.objects.create_user(
@@ -956,7 +956,7 @@ class PostSeminarSeminaridUserTestCase(TestCase):
             password="password",
             email="inst@mail.com",
         )
-        self.inst_token = Token.objects.create(user=inst)
+        self.inst_token = 'Token ' + Token.objects.create(user=inst).key
         InstructorProfile.objects.create(user=inst)
 
         partinst4 = User.objects.create_user(
@@ -964,7 +964,7 @@ class PostSeminarSeminaridUserTestCase(TestCase):
             password="password",
             email="partinst4@mail.com",
         )
-        self.partinst4_token = Token.objects.create(user=partinst4)
+        self.partinst4_token = 'Token ' + Token.objects.create(user=partinst4).key
         ParticipantProfile.objects.create(user=partinst4)
         InstructorProfile.objects.create(user=partinst4)
 
@@ -1005,8 +1005,9 @@ class PostSeminarSeminaridUserTestCase(TestCase):
         )
 
     def test_post_seminar_seminarid_unauthorized(self):
-        response = self.client.put(         # unauthorized
+        response = self.client.post(         # unauthorized
             '/api/v1/seminar/{}/user/'.format(self.seminar2_id),
+            json.dumps({"role": "participant",}),
             content_type='application/json',
         )
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
@@ -1014,7 +1015,15 @@ class PostSeminarSeminaridUserTestCase(TestCase):
         self.assertEqual(UserSeminar.objects.filter(seminar__name="seminar2").count(), 2)
 
     def test_post_seminar_seminarid_wrong_seminarid(self):
-        pass
+        response = self.client.post(         # wrong seminarid
+            '/api/v1/seminar/99/user/',
+            json.dumps({"role": "participant",}),
+            content_type='application/json',
+            HTTP_AUTHORIZATION=self.part3_token,
+        )
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+        self.assertEqual(UserSeminar.objects.count(), 4)
 
     def test_post_seminar_semianrid_wrong_role(self):
         pass
