@@ -1027,48 +1027,56 @@ class PostSeminarSeminaridUserTestCase(TestCase):
 
     def test_post_seminar_seminarid_wrong_role(self):
         response = self.client.post(         # Wrong role
-            '/api/v1/seminar/99/user/',
+            '/api/v1/seminar/{}/user/'.format(self.seminar2_id),
             json.dumps({"role": "p",}),
             content_type='application/json',
             HTTP_AUTHORIZATION=self.part3_token,
         )
-        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
         response = self.client.post(         # role blank
-            '/api/v1/seminar/99/user/',
+            '/api/v1/seminar/{}/user/'.format(self.seminar2_id),
             json.dumps({"role": "",}),
             content_type='application/json',
             HTTP_AUTHORIZATION=self.part3_token,
         )
-        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
         response = self.client.post(         # No role
-            '/api/v1/seminar/99/user/',
+            '/api/v1/seminar/{}/user/'.format(self.seminar2_id),
             content_type='application/json',
             HTTP_AUTHORIZATION=self.part3_token,
         )
-        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
         response = self.client.post(         # No instructor profile
-            '/api/v1/seminar/99/user/',
+            '/api/v1/seminar/{}/user/'.format(self.seminar2_id),
             json.dumps({"role": "instructor",}),
             content_type='application/json',
             HTTP_AUTHORIZATION=self.part3_token,
         )
-        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
         response = self.client.post(         # No participant profile
-            '/api/v1/seminar/99/user/',
+            '/api/v1/seminar/{}/user/'.format(self.seminar2_id),
             json.dumps({"role": "participant",}),
             content_type='application/json',
             HTTP_AUTHORIZATION=self.inst_token,
         )
-        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
         self.assertEqual(UserSeminar.objects.count(), 4)
 
     def test_post_seminar_seminarid_not_accepted(self):
-        pass
+        response = self.client.post(         # Not accepted
+            '/api/v1/seminar/{}/user/'.format(self.seminar2_id),
+            json.dumps({"role": "participant",}),
+            content_type='application/json',
+            HTTP_AUTHORIZATION=self.part2_token,
+        )
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+        self.assertEqual(UserSeminar.objects.count(), 4)
 
     def test_post_seminar_seminarid_capacity_full(self):
         pass
