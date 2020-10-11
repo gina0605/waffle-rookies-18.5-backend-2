@@ -1251,10 +1251,77 @@ class DeleteSeminarSeminaridUserTestCase(TestCase):
     client = Client()
 
     def setUp(self):
-        pass
+        part = User.objects.create_user(
+            username="part",
+            email="part@mail.com",
+            password="password"
+        )
+        self.part_token = 'Token ' + Token.objects.create(user=part).key
+        ParticipantProfile.objects.create(user=part)
+
+        partinst = User.objects.create_user(
+            username="partinst",
+            email="partinst@mail.com",
+            password="password"
+        )
+        self.partinst_token = 'Token ' + Token.objects.create(user=partinst).key
+        ParticipantProfile.objects.create(user=partinst)
+        InstructorProfile.objects.create(user=partinst)
+
+        inst = User.objects.create_user(
+            username="inst",
+            email="inst@mail.com",
+            password="password"
+        )
+        self.inst_token = 'Token ' + Token.objects.create(user=inst).key
+        InstructorProfile.objects.create(user=inst)
+
+        seminar1 = Seminar.objects.create(
+            name="seminar1",
+            capacity=10,
+            count=5,
+            time=timezone.localtime()
+        )
+        self.seminar1_id = seminar1.id
+        UserSeminar.objects.create(
+            user=part,
+            seminar=seminar1,
+            role="participant",
+            dropped_at=timezone.localtime()
+        )
+        UserSeminar.objects.create(
+            user=partinst,
+            seminar=seminar1,
+            role="instructor",
+        )
+
+        seminar2 = Seminar.objects.create(
+            name="seminar2",
+            capacity=10,
+            count=5,
+            time=timezone.localtime()
+        )
+        self.seminar2_id = seminar2.id
+        UserSeminar.objects.create(
+            user=partinst,
+            seminar=seminar2,
+            role="participant",
+        )
+        UserSeminar.objects.create(
+            user=inst,
+            seminar=seminar2,
+            role="instructor",
+        )
 
     def test_delete_seminar_seminarid_user_unauthorized(self):
-        pass
+        response = self.client.delete(         # unauthorized
+            '/api/v1/seminar/{}/user/'.format(self.seminar2_id),
+            content_type='application/json',
+        )
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+        self.assertEqual(UserSeminar.objects.count(), 4)
+        self.assertEqual(UserSeminar.objects.filter(dropped_at=None).count(), 3)
 
     def test_delete_seminar_seminarid_user_wrong_seminarid(self):
         pass
