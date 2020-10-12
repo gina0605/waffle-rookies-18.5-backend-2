@@ -570,14 +570,12 @@ class PostUserLogoutTestCase(TestCase):
     def test_post_user_unauthorized(self):
         response = self.client.post(         # Unauthorized
             '/api/v1/user/logout/',
-            content_type='application/json'
         )
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
     def test_post_user(self):
         response = self.client.post(         # Correct
             '/api/v1/user/logout/',
-            content_type='application/json',
             HTTP_AUTHORIZATION=self.user_token
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -665,21 +663,18 @@ class GetUserPkTestCase(TestCase):
     def test_get_user_userid_unauthorized(self):
         response = self.client.get(         # Unauthorized
             '/api/v1/user/1/',
-            content_type='application/json',
         )
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
     def test_get_user_me_unauthorized(self):
         response = self.client.get(         # Unauthorized
             '/api/v1/user/me/',
-            content_type='application/json',
         )
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
     def test_get_user_userid_wrong_pk(self):
         response = self.client.get(         # Wrong pk
             '/api/v1/user/3/',
-            content_type='application/json',
             HTTP_AUTHORIZATION=self.part_token
         )
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
@@ -687,7 +682,6 @@ class GetUserPkTestCase(TestCase):
     def test_get_user_userid(self):
         response = self.client.get(         # Correct, participant with seminar
             '/api/v1/user/{}/'.format(self.part_id),
-            content_type='application/json',
             HTTP_AUTHORIZATION=self.part_token
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -717,7 +711,6 @@ class GetUserPkTestCase(TestCase):
 
         response = self.client.get(         # Correct, instructor without seminar
             '/api/v1/user/{}/'.format(self.inst2_id),
-            content_type='application/json',
             HTTP_AUTHORIZATION=self.inst_token
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -742,7 +735,6 @@ class GetUserPkTestCase(TestCase):
     def test_get_user_me(self):
         response = self.client.get(         # Correct, instructor with seminar
             '/api/v1/user/me/',
-            content_type='application/json',
             HTTP_AUTHORIZATION=self.inst_token
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -770,7 +762,6 @@ class GetUserPkTestCase(TestCase):
 
         response = self.client.get(         # Correct, participant without seminar
             '/api/v1/user/me/',
-            content_type='application/json',
             HTTP_AUTHORIZATION=self.part2_token
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -840,7 +831,6 @@ class PostUserParticipantTestCase(TestCase):
     def test_user_participant_unauthorized(self):
         response = self.client.post(         # Unauthorized
             '/api/v1/user/participant/',
-            content_type='application/json',
         )
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
@@ -862,7 +852,6 @@ class PostUserParticipantTestCase(TestCase):
     def test_user_participant_request_by_participant(self):
         response = self.client.post(         # Already a participant
             '/api/v1/user/participant/',
-            content_type='application/json',
             HTTP_AUTHORIZATION=self.partinst_token
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
@@ -872,7 +861,6 @@ class PostUserParticipantTestCase(TestCase):
     def test_user_participant(self):
         response = self.client.post(         # Correct
             '/api/v1/user/participant/',
-            content_type='application/json',
             HTTP_AUTHORIZATION=self.inst_token
         )
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)

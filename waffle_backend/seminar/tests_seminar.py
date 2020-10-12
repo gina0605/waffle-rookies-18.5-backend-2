@@ -653,14 +653,12 @@ class GetSeminarSeminaridTestCase(TestCase):
     def test_get_seminar_seminarid_wrong_id(self):
         response = self.client.get(         # wrong id
             '/api/v1/seminar/10/',
-            content_type='application/json',
         )
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
     def test_get_seminar(self):
         response = self.client.get(         # Correct
             '/api/v1/seminar/{}/'.format(self.seminar_id),
-            content_type='application/json',
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
@@ -714,7 +712,6 @@ class GetSeminarSeminaridTestCase(TestCase):
 
         response = self.client.get(         # Correct
             '/api/v1/seminar/{}/'.format(self.seminar2_id),
-            content_type='application/json',
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
@@ -828,7 +825,6 @@ class GetSeminarTestCase(TestCase):
     def test_get_seminar(self):
         response = self.client.get(         # Correct
             '/api/v1/seminar/',
-            content_type='application/json',
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
@@ -874,7 +870,6 @@ class GetSeminarTestCase(TestCase):
     def test_get_seminar_name(self):
         response = self.client.get(         # Correct
             '/api/v1/seminar/?name=2',
-            content_type='application/json',
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
@@ -887,7 +882,6 @@ class GetSeminarTestCase(TestCase):
     def test_get_seminar_earliest(self):
         response = self.client.get(         # Correct
             '/api/v1/seminar/?order=earliest&sth=dd',
-            content_type='application/json',
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
@@ -1340,14 +1334,12 @@ class DeleteSeminarSeminaridUserTestCase(TestCase):
     def test_delete_seminar_seminarid_user_unauthorized(self):
         response = self.client.delete(         # unauthorized
             '/api/v1/seminar/{}/user/'.format(self.seminar2_id),
-            content_type='application/json',
         )
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
     def test_delete_seminar_seminarid_user_wrong_seminarid(self):
         response = self.client.delete(         # Wrong seminarid
             '/api/v1/seminar/99/user/',
-            content_type='application/json',
             HTTP_AUTHORIZATION=self.partinst_token,
         )
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
@@ -1355,14 +1347,12 @@ class DeleteSeminarSeminaridUserTestCase(TestCase):
     def test_delete_seminar_seminarid_user_instructor(self):
         response = self.client.delete(         # Instructor
             '/api/v1/seminar/{}/user/'.format(self.seminar1_id),
-            content_type='application/json',
             HTTP_AUTHORIZATION=self.partinst_token,
         )
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
         response = self.client.delete(         # Instructor
             '/api/v1/seminar/{}/user/'.format(self.seminar2_id),
-            content_type='application/json',
             HTTP_AUTHORIZATION=self.inst_token,
         )
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
@@ -1373,7 +1363,6 @@ class DeleteSeminarSeminaridUserTestCase(TestCase):
     def test_delete_seminar_seminarid_user_not_attending(self):
         response = self.client.delete(         # Already dropped
             '/api/v1/seminar/{}/user/'.format(self.seminar1_id),
-            content_type='application/json',
             HTTP_AUTHORIZATION=self.part1_token,
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -1382,7 +1371,6 @@ class DeleteSeminarSeminaridUserTestCase(TestCase):
 
         response = self.client.delete(         # Not attending
             '/api/v1/seminar/{}/user/'.format(self.seminar1_id),
-            content_type='application/json',
             HTTP_AUTHORIZATION=self.inst_token,
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -1397,7 +1385,6 @@ class DeleteSeminarSeminaridUserTestCase(TestCase):
     def test_delete_seminar_seminarid_user(self):
         response = self.client.delete(         # Correct
             '/api/v1/seminar/{}/user/'.format(self.seminar2_id),
-            content_type='application/json',
             HTTP_AUTHORIZATION=self.partinst_token,
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -1441,7 +1428,6 @@ class DeleteSeminarSeminaridUserTestCase(TestCase):
 
         response = self.client.delete(         # Correct
             '/api/v1/seminar/{}/user/'.format(self.seminar1_id),
-            content_type='application/json',
             HTTP_AUTHORIZATION=self.part2_token,
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
