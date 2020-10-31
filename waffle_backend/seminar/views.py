@@ -1,3 +1,4 @@
+from django.core.cache import cache
 from django.core.exceptions import ObjectDoesNotExist
 from django.utils import timezone
 from django.db.models import Prefetch, Count, Q
@@ -74,26 +75,34 @@ class SeminarViewSet(viewsets.GenericViewSet):
     def list(self, request):
         param = request.query_params
         name = param.get('name', '')
-        seminars = self.get_queryset()\
-            .filter(name__contains=name)\
-            .prefetch_related(
-                Prefetch(
+        data = ''
+        cache_key = 'seminar-list'
+        if not name:
+            data = cache.get(cache_key)
+        if not data:
+            seminars = self.get_queryset()\
+                .filter(name__contains=name)\
+                .prefetch_related(
+                    Prefetch(
+                        'user_seminars',
+                        queryset=UserSeminar.objects.filter(role='instructor'),
+                        to_attr='userseminar_instructors'
+                    )
+                ).prefetch_related('userseminar_instructors__user')
+            seminars = seminars.annotate(
+                participant_count=Count(
                     'user_seminars',
-                    queryset=UserSeminar.objects.filter(role='instructor'),
-                    to_attr='userseminar_instructors'
+                    filter=Q(user_seminars__role='participant') & Q(user_seminars__dropped_at=None)
                 )
-            ).prefetch_related('userseminar_instructors__user')
-        seminars = seminars.annotate(
-            participant_count=Count(
-                'user_seminars',
-                filter=Q(user_seminars__role='participant') & Q(user_seminars__dropped_at=None)
             )
-        )
-        if param.get('order', '') == 'earliest':
-            seminars = seminars.order_by('created_at')
-        else:
-            seminars = seminars.order_by('-created_at')
-        return Response(self.get_serializer(seminars, many=True).data)
+            if param.get('order', '') == 'earliest':
+                seminars = seminars.order_by('created_at')
+            else:
+                seminars = seminars.order_by('-created_at')
+            data = self.get_serializer(seminars, many=True).data
+            if not name:
+                cache.set(cache_key, data, timeout=10)
+        return Response(data)
 
     @action(detail=True, methods=['POST', 'DELETE'])
     def user(self, request, pk):
