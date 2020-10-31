@@ -101,7 +101,7 @@ class SeminarViewSet(viewsets.GenericViewSet):
                 seminars = seminars.order_by('-created_at')
             data = self.get_serializer(seminars, many=True).data
             if not name:
-                cache.set(cache_key, data, timeout=10)
+                cache.set(cache_key, data, timeout=60)
         return Response(data)
 
     @action(detail=True, methods=['POST', 'DELETE'])
