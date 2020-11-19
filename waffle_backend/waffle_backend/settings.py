@@ -27,7 +27,9 @@ SECRET_KEY = '0^k@b1ln%g7l_*6xr*&5&vhgp7r$i&n-db#_!(8*a$n2y1hf4='
 DEBUG = True
 DEBUG_TOOLBAR = os.getenv('DEBUG_TOOLBAR') in ('true', 'True')
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [
+    '3.35.135.58',
+]
 
 
 # Application definition
@@ -94,7 +96,7 @@ WSGI_APPLICATION = 'waffle_backend.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'HOST': 'localhost',
+        'HOST': 'waffle-backend.cwyhyaoeudht.ap-northeast-2.rds.amazonaws.com',
         'PORT': 3306,
         'NAME': 'waffle_backend_assignment_2',
         'USER': 'waffle-backend',
