@@ -21,7 +21,7 @@ from django.urls import include, path
 from waffle_backend.views import ping
 
 urlpatterns = [
-	path('', ping),
+    path('', ping),
     path('admin/', admin.site.urls),
     path('api/v1/', include('survey.urls')),
     path('api/v1/', include('user.urls')),
