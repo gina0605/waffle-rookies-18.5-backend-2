@@ -29,7 +29,7 @@ DEBUG_TOOLBAR = os.getenv('DEBUG_TOOLBAR') in ('true', 'True')
 
 ALLOWED_HOSTS = [
     '3.35.135.58',
-	'.sweet-waffle-backend.shop',
+    '.sweet-waffle-backend.shop',
 ]
 
 
